@@ -72,9 +72,11 @@ void ATurret::Tick(float DeltaTime)
 				}
 			}
 
+			
+
 			// Handle input
 
-			const FTankInput& CurrentInput = Tank->GetCurrentInput();
+			/*const FTankInput& CurrentInput = Tank->GetCurrentInput();
 			if (CurrentInput.bFire1 && Projectile != nullptr)
 			{
 				if (UWorld* World = GetWorld())
@@ -87,6 +89,7 @@ void ATurret::Tick(float DeltaTime)
 
 						if (AActor* NewProjectile = World->SpawnActor(Projectile))
 						{
+							
 							NewProjectile->SetActorLocation(Loc);
 							NewProjectile->SetActorRotation(Rot);
 						}
@@ -95,7 +98,7 @@ void ATurret::Tick(float DeltaTime)
 						Fire1ReadyTime = CurrentTime + Fire1Cooldown;
 					}
 				}
-			}
+			}*/
 		}
 	}
 }

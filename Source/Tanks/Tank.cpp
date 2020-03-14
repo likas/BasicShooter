@@ -97,6 +97,7 @@ ATank::ATank()
 	MoveSpeed = 100.0f;
 	//MoveAccel = 200.0f;
 	YawSpeed = 5.0f;
+	Fire1Cooldown = 0.5f;
 }
 
 // Called when the game starts or when spawned
@@ -114,12 +115,14 @@ void ATank::Tick(float DeltaTime)
 	const FTankInput& CurrentInput = GetCurrentInput();
 	if (CurrentInput.bMoveForward || CurrentInput.bMoveBackward)
 	{
-		//UE_LOG(LogTemp, Log, TEXT("Pressed"));
+		UE_LOG(LogTemp, Log, TEXT("Pressed"));
 		//ѕолучить вектор направлени€
-		FVector WhereToMove = TankDirection->GetForwardVector() * (DeltaTime * MoveSpeed * CurrentInput.bMoveForward ? 1 : -1);
+		FVector WhereToMove = TankDirection->GetForwardVector() * (CurrentInput.bMoveForward ? 1 : -1);
+		UE_LOG(LogTemp, Log, TEXT("Direction: (%f, %f)"), TankDirection->GetForwardVector().X, TankDirection->GetForwardVector().Y);
+		UE_LOG(LogTemp, Log, TEXT("Location: (%f, %f)"), WhereToMove.X, WhereToMove.Y);
 		//ƒобавить вектор к текущему местоположению
 		FVector Pos = GetActorLocation();
-		SetActorLocation(Pos + WhereToMove);
+		SetActorLocation(Pos + WhereToMove * MoveSpeed * DeltaTime);
 	}
 	if (CurrentInput.bTurnLeft || CurrentInput.bTurnRight)
 	{
@@ -128,77 +131,23 @@ void ATank::Tick(float DeltaTime)
 		TankDirection->AddLocalRotation(QuatRotation, false, 0, ETeleportType::None);
 	}
 
-	//UE_LOG(LogTemp, Warning, TEXT("Movement: (%f, %f)"), TankInput.MovementInput.X, TankInput.MovementInput.Y);
-	//Move the tank
-	{
-		FVector DesiredMovementDirection = FVector(TankInput.MovementInput.X, TankInput.MovementInput.Y, 0.f);
-		
-		
-
-
-
-
-
-
-		if (false) //old version
+	if (UWorld* World = GetWorld()) {
+		float CurrentTime = World->GetTimeSeconds();
+		if (CurrentInput.bFire1 && Fire1ReadyTime <= CurrentTime)
 		{
-			//if (!DesiredMovementDirection.IsNearlyZero())
-			if (CurrentInput.bMoveForward || CurrentInput.bMoveBackward)
+			FVector Loc = GetActorLocation();
+			FRotator Rot = TankDirection->GetComponentRotation();
+			if (AActor* NewProjectile = World->SpawnActor(Projectile))
 			{
-				// Rotate the tank! (TankDirectionComponent, not the RootComponent
-				//FRotator MovementAngle = DesiredMovementDirection.Rotation();
-				FRotator MovementAngle = FRotator(0.f, CurrentInput.bMoveForward ? 1.f : -1.f, 0.f);
-				//TankDirection->SetWorldRotation(MovementAngle);
-				float DeltaYaw = UTankStatics::FindDeltaAngleDegrees(TankDirection->GetComponentRotation().Yaw, MovementAngle.Yaw);
-				bool bReverse = false;
-				if (DeltaYaw != 0.f)
-				{
-					float AdjustedDeltaYaw = DeltaYaw;
-
-					if (AdjustedDeltaYaw < -90.f) {
-						AdjustedDeltaYaw += 180.f;
-						bReverse = true;
-					}
-					else if (AdjustedDeltaYaw > 90.f)
-					{
-						AdjustedDeltaYaw -= 180.f;
-						bReverse = true;
-					}
-
-					//Turn toward the desired angle. Stop if we can get there in one frame
-
-					float MaxYawThisFrame = YawSpeed * DeltaTime;
-					if (MaxYawThisFrame >= FMath::Abs(AdjustedDeltaYaw))
-					{
-						if (bReverse)
-						{
-							FRotator FacingAngle = MovementAngle;
-							FacingAngle.Yaw = MovementAngle.Yaw + 180.f;
-							TankDirection->SetWorldRotation(FacingAngle);
-						}
-						else
-						{
-							TankDirection->SetWorldRotation(MovementAngle);
-						}
-					}
-					else
-					{
-						// Cant reach our desired angle this frame, rotate part way
-						TankDirection->AddLocalRotation(FRotator(0.f, FMath::Sign(AdjustedDeltaYaw) * MaxYawThisFrame, 0.f));
-					}
-				}
-				//Move the tank
-				if(false){
-					FVector MovementDirection = TankDirection->GetForwardVector(); /* *(bReverse ? -1.f : 1.f); */
-					FVector Pos = GetActorLocation();
-					Pos.X += DesiredMovementDirection.X * MoveSpeed * DeltaTime;
-					Pos.Y += DesiredMovementDirection.Y * MoveSpeed * DeltaTime;
-					SetActorLocation(Pos);
-				}
+				UE_LOG(LogTemp, Log, TEXT("Projectile spawned"));
+				NewProjectile->SetActorLocation(Loc);
+				NewProjectile->SetActorRotation(Rot);
 			}
-		}
-		}
 
+			// Set the cooldown timer.
+			Fire1ReadyTime = CurrentTime + Fire1Cooldown;
+		}
+	}
 }
 
 // Called to bind functionality to input

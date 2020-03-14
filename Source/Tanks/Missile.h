@@ -37,6 +37,9 @@ public:
 	/** This missile's radius for collisions. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 		float Radius;
+	/** This missile's lifespan */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+		float Lifespan;
 
 	/** Describes what this missile hits. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")

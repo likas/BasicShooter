@@ -75,6 +75,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tank", meta = (ClampMin = "0.0"))
 		float MoveSpeed;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tank")
+		TSubclassOf<AActor> Projectile;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -119,4 +122,12 @@ private:
 	//In-game camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* CameraComponent;
+
+	// If this value is greater than the current game time, Fire1 is ignored because it has been fired too recently.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turret", meta = (AllowPrivateAccess = "true"))
+		float Fire1ReadyTime;
+
+	// Time to delay between Fire1 commands.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turret", meta = (AllowPrivateAccess = "true"))
+		float Fire1Cooldown;
 };

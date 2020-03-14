@@ -28,8 +28,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turret")
 		class ATank* Tank;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turret")
-		TSubclassOf<AActor> Projectile;
+	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turret")
+		TSubclassOf<AActor> Projectile;*/
 
 public:	
 	// Called every frame
