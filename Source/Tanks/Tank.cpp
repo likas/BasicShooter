@@ -22,6 +22,29 @@ void FTankInput::MoveY(float AxisValue) {
 	RawMovementInput.Y += AxisValue;
 }
 
+//Moving straight
+void FTankInput::MoveForward(bool bPressed)
+{
+	bMoveForward = bPressed;
+}
+
+void FTankInput::MoveBackward(bool bPressed)
+{
+	bMoveBackward = bPressed;
+}
+
+//Moving around
+void FTankInput::TurnLeft(bool bPressed)
+{
+	bTurnLeft = bPressed;
+}
+
+void FTankInput::TurnRight(bool bPressed)
+{
+	bTurnRight = bPressed;
+}
+
+//Attacking
 void FTankInput::Fire1(bool bPressed)
 {
 	bFire1 = bPressed;
@@ -71,9 +94,9 @@ ATank::ATank()
 	ChildTurret = CreateDefaultSubobject<UChildActorComponent>(TEXT("Turret"));
 	ChildTurret->SetupAttachment(TankDirection);
 
-	/*MoveSpeed = 100.0f;
-	MoveAccel = 200.0f;
-	YawSpeed = 180.0f;*/
+	MoveSpeed = 100.0f;
+	//MoveAccel = 200.0f;
+	YawSpeed = 5.0f;
 }
 
 // Called when the game starts or when spawned
@@ -88,62 +111,93 @@ void ATank::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	TankInput.Sanitize();
+	const FTankInput& CurrentInput = GetCurrentInput();
+	if (CurrentInput.bMoveForward || CurrentInput.bMoveBackward)
+	{
+		//UE_LOG(LogTemp, Log, TEXT("Pressed"));
+		//ѕолучить вектор направлени€
+		FVector WhereToMove = TankDirection->GetForwardVector() * (DeltaTime * MoveSpeed * CurrentInput.bMoveForward ? 1 : -1);
+		//ƒобавить вектор к текущему местоположению
+		FVector Pos = GetActorLocation();
+		SetActorLocation(Pos + WhereToMove);
+	}
+	if (CurrentInput.bTurnLeft || CurrentInput.bTurnRight)
+	{
+		FRotator NewRotation = FRotator(0.f, CurrentInput.bTurnRight ? YawSpeed : -1.f * YawSpeed, 0.f);
+		FQuat QuatRotation = FQuat(NewRotation);
+		TankDirection->AddLocalRotation(QuatRotation, false, 0, ETeleportType::None);
+	}
+
 	//UE_LOG(LogTemp, Warning, TEXT("Movement: (%f, %f)"), TankInput.MovementInput.X, TankInput.MovementInput.Y);
 	//Move the tank
 	{
 		FVector DesiredMovementDirection = FVector(TankInput.MovementInput.X, TankInput.MovementInput.Y, 0.f);
-		if (!DesiredMovementDirection.IsNearlyZero())
+		
+		
+
+
+
+
+
+
+		if (false) //old version
 		{
-			// Rotate the tank! (TankDirectionComponent, not the RootComponent
-			FRotator MovementAngle = DesiredMovementDirection.Rotation();
-			float DeltaYaw = UTankStatics::FindDeltaAngleDegrees(TankDirection->GetComponentRotation().Yaw, MovementAngle.Yaw);
-			bool bReverse = false;
-			/*if (DeltaYaw != 0.f) 
+			//if (!DesiredMovementDirection.IsNearlyZero())
+			if (CurrentInput.bMoveForward || CurrentInput.bMoveBackward)
 			{
-				float AdjustedDeltaYaw = DeltaYaw;
-
-				if (AdjustedDeltaYaw < -90.f) {
-					AdjustedDeltaYaw += 180.f;
-					//bReverse = true;
-				}
-				else if (AdjustedDeltaYaw > 90.f) 
+				// Rotate the tank! (TankDirectionComponent, not the RootComponent
+				//FRotator MovementAngle = DesiredMovementDirection.Rotation();
+				FRotator MovementAngle = FRotator(0.f, CurrentInput.bMoveForward ? 1.f : -1.f, 0.f);
+				//TankDirection->SetWorldRotation(MovementAngle);
+				float DeltaYaw = UTankStatics::FindDeltaAngleDegrees(TankDirection->GetComponentRotation().Yaw, MovementAngle.Yaw);
+				bool bReverse = false;
+				if (DeltaYaw != 0.f)
 				{
-					AdjustedDeltaYaw -= 180.f;
-					//bReverse = true;
-				}
+					float AdjustedDeltaYaw = DeltaYaw;
 
-				//Turn toward the desired angle. Stop if we can get there in one frame
-
-				float MaxYawThisFrame = YawSpeed * DeltaTime;
-				if (MaxYawThisFrame >= FMath::Abs(AdjustedDeltaYaw)) 
-				{
-					if (bReverse) 
+					if (AdjustedDeltaYaw < -90.f) {
+						AdjustedDeltaYaw += 180.f;
+						bReverse = true;
+					}
+					else if (AdjustedDeltaYaw > 90.f)
 					{
-						FRotator FacingAngle = MovementAngle;
-						FacingAngle.Yaw = MovementAngle.Yaw + 180.f;
-						TankDirection->SetWorldRotation(FacingAngle);
+						AdjustedDeltaYaw -= 180.f;
+						bReverse = true;
+					}
+
+					//Turn toward the desired angle. Stop if we can get there in one frame
+
+					float MaxYawThisFrame = YawSpeed * DeltaTime;
+					if (MaxYawThisFrame >= FMath::Abs(AdjustedDeltaYaw))
+					{
+						if (bReverse)
+						{
+							FRotator FacingAngle = MovementAngle;
+							FacingAngle.Yaw = MovementAngle.Yaw + 180.f;
+							TankDirection->SetWorldRotation(FacingAngle);
+						}
+						else
+						{
+							TankDirection->SetWorldRotation(MovementAngle);
+						}
 					}
 					else
 					{
-						TankDirection->SetWorldRotation(MovementAngle);
+						// Cant reach our desired angle this frame, rotate part way
+						TankDirection->AddLocalRotation(FRotator(0.f, FMath::Sign(AdjustedDeltaYaw) * MaxYawThisFrame, 0.f));
 					}
 				}
-				else
-				{
-					// Cant reach our desired angle this frame, rotate part way
-					TankDirection->AddLocalRotation(FRotator(0.f, FMath::Sign(AdjustedDeltaYaw) * MaxYawThisFrame, 0.f));
+				//Move the tank
+				if(false){
+					FVector MovementDirection = TankDirection->GetForwardVector(); /* *(bReverse ? -1.f : 1.f); */
+					FVector Pos = GetActorLocation();
+					Pos.X += DesiredMovementDirection.X * MoveSpeed * DeltaTime;
+					Pos.Y += DesiredMovementDirection.Y * MoveSpeed * DeltaTime;
+					SetActorLocation(Pos);
 				}
-			}*/
-			//Move the tank
-			{
-				FVector MovementDirection = TankDirection->GetForwardVector(); /* *(bReverse ? -1.f : 1.f); */
-				FVector Pos = GetActorLocation();
-				Pos.X += DesiredMovementDirection.X * MoveSpeed * DeltaTime;
-				Pos.Y += DesiredMovementDirection.Y * MoveSpeed * DeltaTime;
-				SetActorLocation(Pos);
 			}
 		}
-	}
+		}
 
 }
 
@@ -154,6 +208,14 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAxis("MoveX", this, &ATank::MoveX); 
 	PlayerInputComponent->BindAxis("MoveY", this, &ATank::MoveY);
+	PlayerInputComponent->BindAction("MoveForward", EInputEvent::IE_Pressed, this, &ATank::MoveForwardPressed);
+	PlayerInputComponent->BindAction("MoveForward", EInputEvent::IE_Released, this, &ATank::MoveForwardReleased);
+	PlayerInputComponent->BindAction("MoveBackward", EInputEvent::IE_Pressed, this, &ATank::MoveBackwardPressed);
+	PlayerInputComponent->BindAction("MoveBackward", EInputEvent::IE_Released, this, &ATank::MoveBackwardReleased);
+	PlayerInputComponent->BindAction("TurnRight", EInputEvent::IE_Pressed, this, &ATank::TurnRightPressed);
+	PlayerInputComponent->BindAction("TurnRight", EInputEvent::IE_Released, this, &ATank::TurnRightReleased);
+	PlayerInputComponent->BindAction("TurnLeft", EInputEvent::IE_Pressed, this, &ATank::TurnLeftPressed);
+	PlayerInputComponent->BindAction("TurnLeft", EInputEvent::IE_Released, this, &ATank::TurnLeftReleased);
 	PlayerInputComponent->BindAction("Fire1", EInputEvent::IE_Pressed, this, &ATank::Fire1Pressed);
 	PlayerInputComponent->BindAction("Fire1", EInputEvent::IE_Released, this, &ATank::Fire1Released);
 	PlayerInputComponent->BindAction("Fire2", EInputEvent::IE_Pressed, this, &ATank::Fire2Pressed);
@@ -168,6 +230,49 @@ void ATank::MoveY(float AxisValue) {
 	TankInput.MoveY(AxisValue);
 }
 
+//Move straight section
+void ATank::MoveForwardPressed()
+{
+	TankInput.MoveForward(true);
+}
+
+void ATank::MoveForwardReleased()
+{
+	TankInput.MoveForward(false);
+}
+
+void ATank::MoveBackwardPressed()
+{
+	TankInput.MoveBackward(true);
+}
+
+void ATank::MoveBackwardReleased()
+{
+	TankInput.MoveBackward(false);
+}
+
+//Spin around section
+void ATank::TurnRightPressed()
+{
+	TankInput.TurnRight(true);
+}
+
+void ATank::TurnRightReleased()
+{
+	TankInput.TurnRight(false);
+}
+
+void ATank::TurnLeftPressed()
+{
+	TankInput.TurnLeft(true);
+}
+
+void ATank::TurnLeftReleased()
+{
+	TankInput.TurnLeft(false);
+}
+
+//Attack button section
 void ATank::Fire1Pressed()
 {
 	TankInput.Fire1(true);

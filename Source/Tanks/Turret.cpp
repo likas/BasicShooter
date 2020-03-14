@@ -50,7 +50,7 @@ void ATurret::Tick(float DeltaTime)
 				FVector2D TurretLocation = FVector2D::ZeroVector; //just in case
 				UGameplayStatics::ProjectWorldToScreen(PC, TurretDirection->GetComponentLocation(), TurretLocation);
 				//UE_LOG(LogTemp, Warning, TEXT("X: %f, Y: %f"), AimLocation.X, AimLocation.Y);
-				UE_LOG(LogTemp, Warning, TEXT("X: %f, Y: %f"), TurretLocation.X, TurretLocation.Y);
+				//UE_LOG(LogTemp, Warning, TEXT("X: %f, Y: %f"), TurretLocation.X, TurretLocation.Y);
 
 				float DesiredYaw;
 

@@ -52,7 +52,6 @@ void ABot::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void ABot::BotAI_Implementation(float DeltaSeconds)
 {
-	UE_LOG(LogTemp, Warning, TEXT("!!  BotAI_Implementation was called"));
 	// The Bot always moves unless attacking. If moving, it moves between WalkSpeed and RunSpeed.
 	FVector DesiredMovement = GetAttackInput() ? FVector::ZeroVector : (FMath::GetMappedRangeValueClamped(FVector2D(0.0f, 1.0f), FVector2D(WalkSpeed, RunSpeed), GetPendingMovementInputVector().X)) * DeltaSeconds * GetActorForwardVector();
 	FVector OriginalLocation = GetActorLocation();
@@ -89,6 +88,7 @@ void ABot::BotAI_Implementation(float DeltaSeconds)
 					if (ATank* TankTarget = GetTargetAsTank())
 					{
 						//TankTarget->DamageHealth(10.0f);
+						UE_LOG(LogTemp, Warning, TEXT("Attack!"));
 						if (APlayerController* PC = Cast<APlayerController>(TankTarget->GetController()))
 						{
 							PC->ClientPlayCameraShake(HitShake, 1.0f);
@@ -108,7 +108,6 @@ void ABot::BotAI_Implementation(float DeltaSeconds)
 		// TODO: Make this use a list of registered targets so we can handle multiplayer or add decoys.
 		Target = UGameplayStatics::GetPlayerPawn(this, 0);
 		float DistSqXY = FVector::DistSquaredXY(Target->GetActorLocation(), GetActorLocation());
-		UE_LOG(LogTemp, Warning, TEXT("Getting there"));
 		if (DistSqXY <= (SightDistance * SightDistance))
 		{
 			FVector DirectionToTarget = (Target->GetActorLocation() - GetActorLocation()).GetSafeNormal2D();
@@ -149,7 +148,6 @@ void ABot::SetTarget(AActor* NewTarget)
 
 AActor* ABot::GetTarget()
 {
-	UE_LOG(LogTemp, Warning, TEXT("GetTarget called"));
 	return TargetActor;
 }
 

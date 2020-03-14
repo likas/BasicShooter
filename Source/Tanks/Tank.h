@@ -22,9 +22,24 @@ public:
 		uint32 bFire1 : 1;
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
 		uint32 bFire2 : 1;
+	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
+		uint32 bMoveForward : 1;
+	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
+		uint32 bMoveBackward : 1;
+	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
+		uint32 bTurnLeft : 1;
+	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
+		uint32 bTurnRight : 1;
 	void Sanitize();
 	void MoveX(float AxisValue);
 	void MoveY(float AxisValue);
+
+	void MoveForward(bool bPressed);
+	void MoveBackward(bool bPressed);
+
+	void TurnLeft(bool bPressed);
+	void TurnRight(bool bPressed);
+
 	void Fire1(bool bPressed);
 	void Fire2(bool bPressed);
 
@@ -73,6 +88,17 @@ private:
 	//Dont have to be the same as in mappings
 	void MoveX(float AxisValue); 
 	void MoveY(float AxisValue);
+
+	void MoveForwardPressed();
+	void MoveForwardReleased();
+	void MoveBackwardPressed();
+	void MoveBackwardReleased();
+
+	void TurnLeftPressed();
+	void TurnLeftReleased();
+	void TurnRightPressed();
+	void TurnRightReleased();
+
 	void Fire1Pressed();
 	void Fire1Released();
 	void Fire2Pressed();
