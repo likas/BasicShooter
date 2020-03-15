@@ -115,11 +115,11 @@ void ATank::Tick(float DeltaTime)
 	const FTankInput& CurrentInput = GetCurrentInput();
 	if (CurrentInput.bMoveForward || CurrentInput.bMoveBackward)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Pressed"));
+		//UE_LOG(LogTemp, Log, TEXT("Pressed"));
 		//ѕолучить вектор направлени€
 		FVector WhereToMove = TankDirection->GetForwardVector() * (CurrentInput.bMoveForward ? 1 : -1);
-		UE_LOG(LogTemp, Log, TEXT("Direction: (%f, %f)"), TankDirection->GetForwardVector().X, TankDirection->GetForwardVector().Y);
-		UE_LOG(LogTemp, Log, TEXT("Location: (%f, %f)"), WhereToMove.X, WhereToMove.Y);
+		/*UE_LOG(LogTemp, Log, TEXT("Direction: (%f, %f)"), TankDirection->GetForwardVector().X, TankDirection->GetForwardVector().Y);
+		UE_LOG(LogTemp, Log, TEXT("Location: (%f, %f)"), WhereToMove.X, WhereToMove.Y);*/
 		//ƒобавить вектор к текущему местоположению
 		FVector Pos = GetActorLocation();
 		SetActorLocation(Pos + WhereToMove * MoveSpeed * DeltaTime);

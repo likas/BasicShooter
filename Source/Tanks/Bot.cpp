@@ -35,7 +35,7 @@ void ABot::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	BotAI(DeltaTime);
+	//BotAI(DeltaTime);
 
 	// Make sure to consume all input on each frame.
 	ConsumeMovementInputVector();

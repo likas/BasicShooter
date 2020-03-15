@@ -41,6 +41,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 		float Lifespan;
 
+
+
 	/** Describes what this missile hits. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 		FName MovementCollisionProfile;
@@ -49,4 +51,6 @@ private:
 	// Sprite for the Missile.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Missile", meta = (AllowPrivateAccess = "true"))
 		class UPaperSpriteComponent* MissileSprite;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile", meta = (AllowPrivateAccess = "true"))
+		bool HasCollidedOnPreviousTick;
 };
