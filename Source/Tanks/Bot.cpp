@@ -1,8 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "Bot.h"
 #include "Tanks.h"
 #include "Tank.h"
-#include "Bot.h"
+
 
 // Sets default values
 ABot::ABot()
@@ -14,7 +15,7 @@ ABot::ABot()
 
 	Health = 100.f;
 	SightDistance = 500.f;
-	SightAngle = 60.f;
+	SightAngle = 180.f;
 	YawSpeed = 90.f;
 	WalkSpeed = 45.f;
 	RunSpeed = 45.f;
@@ -38,9 +39,9 @@ void ABot::Tick(float DeltaTime)
 	//BotAI(DeltaTime);
 
 	// Make sure to consume all input on each frame.
-	ConsumeMovementInputVector();
+	/*ConsumeMovementInputVector();
 	ConsumeRotationInput();
-	ConsumeAttackInput();
+	ConsumeAttackInput();*/
 }
 
 // Called to bind functionality to input

@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+#include "Turret.h"
 #include "Paper2D/Classes/PaperSpriteComponent.h"
 #include "Tank.h"
 #include "Tanks.h"
-#include "Turret.h"
 #include "Missile.h"
 #include <Runtime\Engine\Classes\Kismet\GameplayStatics.h>
 //#include <Tanks\TankStatics.h>

@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "Missile.h"
 #include "Tanks.h"
 #include "Paper2D/Classes/PaperSpriteComponent.h"
-#include "Missile.h"
 #include <Runtime\Engine\Classes\Kismet\KismetMathLibrary.h>
 #include "Math/UnrealMathUtility.h"
 //#include <Runtime\Core\Private\Math\UnrealMath.cpp>
@@ -57,6 +57,11 @@ void AMissile::Tick(float DeltaTime)
 		//if we hit something
 		bool HasCollided = false;
 		HasCollided = World->SweepSingleByProfile(OutHit, Loc, DesiredEndLoc, FQuat::Identity, MovementCollisionProfile, CollisionShape);
+		/*
+		This is to prevent "stucking". "Stucking" is when right after reflection another
+		collision occurs because the projectile is still close to the surface it collided
+		with in the first place
+		*/
 		HasCollidedOnPreviousTick = HasCollidedOnPreviousTick && HasCollided ? 1 : 0;
 		/*UE_LOG(LogTemp, Log, TEXT("Ret = %x"), Ret);*/
 		if (HasCollided && !HasCollidedOnPreviousTick)

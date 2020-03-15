@@ -22,9 +22,23 @@ public:
 	
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
+	void BeginPlay() override;
 
 protected:
 	// Our pawn, pre-cast to a Zombie. Will be NULL if the pawn is NULL or is not a Zombie.
 	UPROPERTY(BlueprintReadOnly, Category = "Bot")
 		ABot* PawnAsBot;
+
+	//Distance we want to maintain from the player
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bot")
+		float Distance;
+private:
+	UPROPERTY()
+		TArray<AActor*> Waypoints;
+
+	UFUNCTION(BlueprintPure)
+		ATargetPoint* GetRandomWaypoint() const;
+
+	UFUNCTION(BlueprintCallable)
+		void GoToRandomWaypoint();
 };
