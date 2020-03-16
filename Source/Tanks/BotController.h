@@ -23,6 +23,9 @@ public:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 	void BeginPlay() override;
+	void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
+
+	//ABotController(const FPostConstructInitializeProperties& PCIP);
 
 protected:
 	// Our pawn, pre-cast to a Zombie. Will be NULL if the pawn is NULL or is not a Zombie.

@@ -3,6 +3,7 @@
 #include "BotController.h"
 #include "Tanks.h"
 #include "Bot.h"
+#include "Navigation/CrowdFollowingComponent.h"
 #include "Engine/TargetPoint.h"
 
 
@@ -12,14 +13,30 @@ void ABotController::BeginPlay()
 	Super::BeginPlay();
 	UE_LOG(LogTemp, Log, TEXT("BeginPlay"));
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATargetPoint::StaticClass(), Waypoints);
+	UE_LOG(LogTemp, Warning, TEXT("%d WPs"), Waypoints.Num());
 	UE_LOG(LogTemp, Log, TEXT("Got the waypoints"));
 	GoToRandomWaypoint();
-
+	UE_LOG(LogTemp, Log, TEXT("Finished?"));
 }
+
+void ABotController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
+{
+	Super::OnMoveCompleted(RequestID, Result);
+	//NavigationHandle::PointCheck()
+	//MoveToLocation(FVector());
+	GoToRandomWaypoint();
+}
+
+
+
+/*ABotController::ABotController(const FPostConstructInitializeProperties& PCIP)
+{
+	Super(PCIP.SetDefaultSubobjectClass<UCrowdFollowingComponent>(TEXT("PathFollowingComponent")))
+}*/
 
 void ABotController::Tick(float DeltaTime)
 {
-	UE_LOG(LogTemp, Log, TEXT("Tick?"));
+	//UE_LOG(LogTemp, Log, TEXT("Tick?"));
 	if (false)
 	{
 		if (PawnAsBot)
@@ -64,10 +81,11 @@ void ABotController::Tick(float DeltaTime)
 
 ATargetPoint* ABotController::GetRandomWaypoint() const
 {
-	auto index = FMath::RandRange(0, Waypoints.Num() - 1);
-	if (index > 0)
+	if (Waypoints.Num() > 0)
 	{
+		auto index = FMath::RandRange(0, Waypoints.Num() - 1);
 		return Cast<ATargetPoint>(Waypoints[index]);
+		UE_LOG(LogTemp, Log, TEXT("%d"), index);
 	}
 	return nullptr;
 }
@@ -79,7 +97,8 @@ void ABotController::GoToRandomWaypoint()
 	if (WhereTo != nullptr)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Sending MoveToActor"));
-		MoveToActor(GetRandomWaypoint());
+		FPathFollowingResult Result = MoveToActor(WhereTo);
+		UE_LOG(LogTemp, Log, TEXT("Move result: %d"), Result.IsFailure() ? 1 : 0);
 	}
 }
 
