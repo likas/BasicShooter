@@ -5,6 +5,7 @@
 //#include "Tanks.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Components/ArrowComponent.h"
 #include "Bot.generated.h"
 
 class ATank;
@@ -88,6 +89,10 @@ public:
 		virtual bool ConsumeAttackInput();
 
 private:
+	//Facing direction
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bot", meta = (AllowPrivateAccess = "true"))
+		UArrowComponent* BotDirection;
+
 	/* The actor we're targeting. Will be NULL if there is no target. */
 	UPROPERTY(VisibleInstanceOnly, Category = "AI")
 		AActor* TargetActor;

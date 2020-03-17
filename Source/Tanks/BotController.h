@@ -36,11 +36,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bot")
 		float Distance;
 private:
+	TQueue<FVector> TravelPoints;
+
 	UPROPERTY()
 		TArray<AActor*> Waypoints;
 
 	UFUNCTION(BlueprintPure)
 		ATargetPoint* GetRandomWaypoint() const;
+
+	UFUNCTION(BlueprintPure)
+		FVector GetNewMovePoint();
 
 	UFUNCTION(BlueprintCallable)
 		void GoToRandomWaypoint();

@@ -11,6 +11,10 @@ ABot::ABot()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	BotDirection = CreateDefaultSubobject<UArrowComponent>(TEXT("BotDirection"));
+	BotDirection->SetupAttachment(RootComponent);
+
+
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	Health = 100.f;
@@ -28,6 +32,7 @@ ABot::ABot()
 void ABot::BeginPlay()
 {
 	Super::BeginPlay();
+	AActor* Target = UGameplayStatics::GetPlayerPawn(this, 0); SetTarget(Target);
 	
 }
 
@@ -36,12 +41,15 @@ void ABot::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//BotAI(DeltaTime);
 
+	//BotAI(DeltaTime);
+	//UE_LOG(LogTemp, Warning, TEXT("Rotation Input: %f"), GetRotationInput());
+	//SetActorRotation(GetActorRotation() + FRotator(0.f, GetRotationInput(), 0.f));
 	// Make sure to consume all input on each frame.
-	/*ConsumeMovementInputVector();
+	ConsumeMovementInputVector();
 	ConsumeRotationInput();
-	ConsumeAttackInput();*/
+	ConsumeAttackInput();
+
 }
 
 // Called to bind functionality to input
@@ -53,6 +61,20 @@ void ABot::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void ABot::BotAI_Implementation(float DeltaSeconds)
 {
+
+	if (AActor* Target = GetTarget()) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Got a target"));
+		float DistanceToTarget = FVector::DistXY(GetActorLocation(), Target->GetActorLocation());
+		if(DistanceToTarget < SightDistance)
+		{
+			//Try to get away
+			//Send a signal that we want to get away
+
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("TheBot!"));
 	// The Bot always moves unless attacking. If moving, it moves between WalkSpeed and RunSpeed.
 	FVector DesiredMovement = GetAttackInput() ? FVector::ZeroVector : (FMath::GetMappedRangeValueClamped(FVector2D(0.0f, 1.0f), FVector2D(WalkSpeed, RunSpeed), GetPendingMovementInputVector().X)) * DeltaSeconds * GetActorForwardVector();
 	FVector OriginalLocation = GetActorLocation();
@@ -107,8 +129,8 @@ void ABot::BotAI_Implementation(float DeltaSeconds)
 	{
 		// Look for a target. We might not do this every single frame, but for now it's OK.
 		// TODO: Make this use a list of registered targets so we can handle multiplayer or add decoys.
-		Target = UGameplayStatics::GetPlayerPawn(this, 0);
-		float DistSqXY = FVector::DistSquaredXY(Target->GetActorLocation(), GetActorLocation());
+		Target = UGameplayStatics::GetPlayerPawn(this, 0); SetTarget(Target);
+		/*float DistSqXY = FVector::DistSquaredXY(Target->GetActorLocation(), GetActorLocation());
 		if (DistSqXY <= (SightDistance * SightDistance))
 		{
 			FVector DirectionToTarget = (Target->GetActorLocation() - GetActorLocation()).GetSafeNormal2D();
@@ -116,7 +138,7 @@ void ABot::BotAI_Implementation(float DeltaSeconds)
 			{
 				SetTarget(Target);
 			}
-		}
+		}*/
 	}
 }
 
