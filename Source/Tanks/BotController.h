@@ -5,6 +5,7 @@
 #include "Bot.h"
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "Containers/Queue.h"
 #include "BotController.generated.h"
 
 class ABot;
@@ -36,7 +37,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bot")
 		float Distance;
 private:
+	//Currently cannot be exposed to Blueprints using UPROPERTY. There are some workarounds
+	//but let's leave it be for now
 	TQueue<FVector> TravelPoints;
+	UPROPERTY()
+	FVector Destination;
 
 	UPROPERTY()
 		TArray<AActor*> Waypoints;

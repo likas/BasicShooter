@@ -52,14 +52,6 @@ public:
 		bool BotAIShouldAttack();
 	virtual bool BotAIShouldAttack_Implementation();
 
-	// This can be used to animate walking.
-	UFUNCTION(BlueprintImplementableEvent, Category = "AI")
-		void BotWalk(float DeltaSeconds, FVector DistanceWalkedThisFrame);
-
-	// This can be used to start attack animations.
-	UFUNCTION(BlueprintImplementableEvent, Category = "AI")
-		void BotAttack(float DeltaSeconds);
-
 	//~
 	//~ New Bot Input
 	//~

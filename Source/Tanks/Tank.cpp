@@ -8,20 +8,6 @@
 #include "Components/InputComponent.h"
 #include "PaperSpriteComponent.h"
 
-void FTankInput::Sanitize() {
-	MovementInput = RawMovementInput.ClampAxes(-1.f, 1.f);
-	MovementInput = MovementInput.GetSafeNormal();
-	RawMovementInput.Set(0.f, 0.f);
-}
-
-void FTankInput::MoveX(float AxisValue) {
-	RawMovementInput.X += AxisValue;
-}
-
-void FTankInput::MoveY(float AxisValue) {
-	RawMovementInput.Y += AxisValue;
-}
-
 //Moving straight
 void FTankInput::MoveForward(bool bPressed)
 {
@@ -91,11 +77,7 @@ ATank::ATank()
 	CameraComponent->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	CameraComponent->SetWorldRotation(FRotator(0.f, 0.f, 0.f)); // Fixed on creation
 
-	ChildTurret = CreateDefaultSubobject<UChildActorComponent>(TEXT("Turret"));
-	ChildTurret->SetupAttachment(TankDirection);
-
 	MoveSpeed = 100.0f;
-	//MoveAccel = 200.0f;
 	YawSpeed = 5.0f;
 	Fire1Cooldown = 0.5f;
 }
@@ -111,21 +93,21 @@ void ATank::BeginPlay()
 void ATank::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	TankInput.Sanitize();
+
 	const FTankInput& CurrentInput = GetCurrentInput();
+
 	if (CurrentInput.bMoveForward || CurrentInput.bMoveBackward)
 	{
-		//UE_LOG(LogTemp, Log, TEXT("Pressed"));
 		//ѕолучить вектор направлени€
 		FVector WhereToMove = TankDirection->GetForwardVector() * (CurrentInput.bMoveForward ? 1 : -1);
-		/*UE_LOG(LogTemp, Log, TEXT("Direction: (%f, %f)"), TankDirection->GetForwardVector().X, TankDirection->GetForwardVector().Y);
-		UE_LOG(LogTemp, Log, TEXT("Location: (%f, %f)"), WhereToMove.X, WhereToMove.Y);*/
+
 		//ƒобавить вектор к текущему местоположению
 		FVector Pos = GetActorLocation();
 		SetActorLocation(Pos + WhereToMove * MoveSpeed * DeltaTime);
 	}
 	if (CurrentInput.bTurnLeft || CurrentInput.bTurnRight)
 	{
+		//TODO Make it frame-independent
 		FRotator NewRotation = FRotator(0.f, CurrentInput.bTurnRight ? YawSpeed : -1.f * YawSpeed, 0.f);
 		FQuat QuatRotation = FQuat(NewRotation);
 		TankDirection->AddLocalRotation(QuatRotation, false, 0, ETeleportType::None);
@@ -155,8 +137,6 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis("MoveX", this, &ATank::MoveX); 
-	PlayerInputComponent->BindAxis("MoveY", this, &ATank::MoveY);
 	PlayerInputComponent->BindAction("MoveForward", EInputEvent::IE_Pressed, this, &ATank::MoveForwardPressed);
 	PlayerInputComponent->BindAction("MoveForward", EInputEvent::IE_Released, this, &ATank::MoveForwardReleased);
 	PlayerInputComponent->BindAction("MoveBackward", EInputEvent::IE_Pressed, this, &ATank::MoveBackwardPressed);
@@ -171,13 +151,6 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("Fire2", EInputEvent::IE_Released, this, &ATank::Fire2Released);
 }
 
-void ATank::MoveX(float AxisValue) {
-	TankInput.MoveX(AxisValue);
-}
-
-void ATank::MoveY(float AxisValue) {
-	TankInput.MoveY(AxisValue);
-}
 
 //Move straight section
 void ATank::MoveForwardPressed()

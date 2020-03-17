@@ -14,10 +14,9 @@ USTRUCT(BlueprintType)
 struct FTankInput {
 public:
 	GENERATED_BODY()
-		//Sanitized movement input, ready to be used by game logic
-		UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
-		FVector2D MovementInput;
 
+	//What these uints really are is a super nice booleans stored within
+	//a bulk so they only take 1 byte each
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
 		uint32 bFire1 : 1;
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
@@ -30,9 +29,6 @@ public:
 		uint32 bTurnLeft : 1;
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
 		uint32 bTurnRight : 1;
-	void Sanitize();
-	void MoveX(float AxisValue);
-	void MoveY(float AxisValue);
 
 	void MoveForward(bool bPressed);
 	void MoveBackward(bool bPressed);
@@ -42,12 +38,6 @@ public:
 
 	void Fire1(bool bPressed);
 	void Fire2(bool bPressed);
-
-
-
-private:
-	//Internal raw data
-	FVector2D RawMovementInput;
 };
 
 UCLASS()
@@ -89,8 +79,6 @@ public:
 
 private:
 	//Dont have to be the same as in mappings
-	void MoveX(float AxisValue); 
-	void MoveY(float AxisValue);
 
 	void MoveForwardPressed();
 	void MoveForwardReleased();
@@ -114,10 +102,6 @@ private:
 	// Sprite for the tank body.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
 		class UPaperSpriteComponent* TankSprite;
-
-	//The actor used as the turret
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
-	UChildActorComponent* ChildTurret;
 
 	//In-game camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))

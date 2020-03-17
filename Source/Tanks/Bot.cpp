@@ -3,6 +3,8 @@
 #include "Bot.h"
 #include "Tanks.h"
 #include "Tank.h"
+#include "GameFramework/Pawn.h"
+#include "Math/Vector.h"
 
 
 // Sets default values
@@ -13,7 +15,6 @@ ABot::ABot()
 
 	BotDirection = CreateDefaultSubobject<UArrowComponent>(TEXT("BotDirection"));
 	BotDirection->SetupAttachment(RootComponent);
-
 
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
@@ -33,7 +34,6 @@ void ABot::BeginPlay()
 {
 	Super::BeginPlay();
 	AActor* Target = UGameplayStatics::GetPlayerPawn(this, 0); SetTarget(Target);
-	
 }
 
 // Called every frame
@@ -43,8 +43,10 @@ void ABot::Tick(float DeltaTime)
 
 
 	//BotAI(DeltaTime);
-	//UE_LOG(LogTemp, Warning, TEXT("Rotation Input: %f"), GetRotationInput());
-	//SetActorRotation(GetActorRotation() + FRotator(0.f, GetRotationInput(), 0.f));
+
+	FVector PendingMovement = GetPendingMovementInputVector();
+	UE_LOG(LogTemp, Log, TEXT("Movement in Actor: %s"), *PendingMovement.ToString());
+	SetActorLocation(GetActorLocation() + (PendingMovement * DeltaTime * WalkSpeed));
 	// Make sure to consume all input on each frame.
 	ConsumeMovementInputVector();
 	ConsumeRotationInput();
@@ -56,7 +58,6 @@ void ABot::Tick(float DeltaTime)
 void ABot::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 void ABot::BotAI_Implementation(float DeltaSeconds)
@@ -86,7 +87,7 @@ void ABot::BotAI_Implementation(float DeltaSeconds)
 	FVector DistanceWalked = GetActorLocation() - OriginalLocation;
 	if (!DistanceWalked.IsNearlyZero())
 	{
-		BotWalk(DeltaSeconds, DistanceWalked);
+
 	}
 
 	// See if we have a target and deal with it if we do. Find a target if we don't.
@@ -102,7 +103,7 @@ void ABot::BotAI_Implementation(float DeltaSeconds)
 		if (GetAttackInput() && (AttackAvailableTime <= CurrentTime))
 		{
 			AttackAvailableTime = CurrentTime + AttackCooldown;
-			BotAttack(DeltaSeconds);
+
 			if (DotToTarget >= FMath::Cos(FMath::DegreesToRadians(AttackAngle)))
 			{
 				float DistSqXY = FVector::DistSquaredXY(Target->GetActorLocation(), OurLocation);

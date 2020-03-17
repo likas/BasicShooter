@@ -8,21 +8,15 @@
 #include "NavigationPath.h"
 #include "PaperSpriteComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Containers/Queue.h"
+#include "Math/Vector.h"
 #include "Engine/TargetPoint.h"
 
 
 void ABotController::BeginPlay()
 {
-	UE_LOG(LogTemp, Log, TEXT("BeginPlay1"));
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Log, TEXT("BeginPlay"));
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATargetPoint::StaticClass(), Waypoints);
-	UE_LOG(LogTemp, Warning, TEXT("%d WPs"), Waypoints.Num());
-	UE_LOG(LogTemp, Log, TEXT("Got the waypoints"));
-	//GoToRandomWaypoint();
-	MoveToActor(PawnAsBot);
-	UE_LOG(LogTemp, Log, TEXT("Finished?"));
+	Destination = PawnAsBot->GetActorLocation();
+	//MoveToLocation(GetNewMovePoint());
 }
 
 FVector ABotController::GetNewMovePoint() 
@@ -43,20 +37,19 @@ FVector ABotController::GetNewMovePoint()
 		if (TravelPath)
 		{
 			//(TravelPath->PathPoints).Num();
-			for (int i = 0; i < TravelPath->PathPoints.Num(); ++i)
+			UE_LOG(LogTemp, Log, TEXT("PathPointsCounter: %d"), TravelPath->PathPoints.Num());
+			for (int i = 1; i < TravelPath->PathPoints.Num(); ++i)
 			{
 				TravelPath->PathPoints[i].Z = PawnAsBot->GetActorLocation().Z;
-				DrawDebugSphere(GetWorld(), TravelPath->PathPoints[i], 10.f, 12, FColor(255, 0, 0), false, 100.f);
+				//DrawDebugSphere(GetWorld(), TravelPath->PathPoints[i], 10.f, 12, FColor(255, 0, 0), false, 100.f);
 				TravelPoints.Enqueue(TravelPath->PathPoints[i]);
-				UE_LOG(LogTemp, Warning, TEXT("Added Random Location: %f %f %f"), TravelPath->PathPoints[i].X, TravelPath->PathPoints[i].Y, TravelPath->PathPoints[i].Z);
-				//UE_LOG(LogTemp, Warning, TEXT("Added Random Location: %s"), TravelPath->PathPoints[i].ToString());
+				//UE_LOG(LogTemp, Warning, TEXT("%d. Added Random Location: %f %f %f"), i, TravelPath->PathPoints[i].X, TravelPath->PathPoints[i].Y, TravelPath->PathPoints[i].Z);
+				UE_LOG(LogTemp, Warning, TEXT("%d. Added Random Location: %s"), i, *TravelPath->PathPoints[i].ToString());
 			}
-			UE_LOG(LogTemp, Log, TEXT("PathPointsCounter: %d"), TravelPath->PathPoints.Num());
+			
 		}
 	}
 	else return Return;
-
-
 	UE_LOG(LogTemp, Log, TEXT("Dequeue successful: %d"), TravelPoints.Dequeue(Return) ? 1 : 0);
 	return Return;
 }
@@ -116,16 +109,20 @@ void ABotController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowin
 	//GoToRandomWaypoint();
 }
 
-
-
-/*ABotController::ABotController(const FPostConstructInitializeProperties& PCIP)
-{
-	Super(PCIP.SetDefaultSubobjectClass<UCrowdFollowingComponent>(TEXT("PathFollowingComponent")))
-}*/
-
 void ABotController::Tick(float DeltaTime)
 {
-
+	UE_LOG(LogTemp, Log, TEXT("Distance between Dest and Loc: %f"), FVector::DistXY(PawnAsBot->GetActorLocation(), Destination));
+	//Give movement input
+	FVector DestinationVector;
+	if (FVector::DistXY(PawnAsBot->GetActorLocation(), Destination) <= 10.f) {
+		Destination = GetNewMovePoint();
+		
+		DrawDebugSphere(GetWorld(), Destination, 10.f, 12, FColor(0, 255, 0), false, 100.f);
+	}
+	DestinationVector = (Destination - PawnAsBot->GetActorLocation()).GetSafeNormal();
+	DrawDebugDirectionalArrow(GetWorld(), PawnAsBot->GetActorLocation(), Destination, 30.f, FColor(0, 0, 255), false, 100.f);
+	PawnAsBot->AddMovementInput(FVector(DestinationVector.X, DestinationVector.Y, 0.f));
+	UE_LOG(LogTemp, Log, TEXT("Sending movement to Actor: %s"), *DestinationVector.GetSafeNormal2D().ToString());
 
 	//UE_LOG(LogTemp, Log, TEXT("Tick?"));
 	if (false)
