@@ -22,7 +22,7 @@ ABot::ABot()
 	SightDistance = 500.f;
 	SightAngle = 180.f;
 	YawSpeed = 90.f;
-	WalkSpeed = 45.f;
+	WalkSpeed = 100.f;
 	RunSpeed = 45.f;
 	AttackDistance = 100.f;
 	AttackAngle = 30.f;
@@ -47,6 +47,8 @@ void ABot::Tick(float DeltaTime)
 	FVector PendingMovement = GetPendingMovementInputVector();
 	UE_LOG(LogTemp, Log, TEXT("Movement in Actor: %s"), *PendingMovement.ToString());
 	SetActorLocation(GetActorLocation() + (PendingMovement * DeltaTime * WalkSpeed));
+	FRotator DesiredRot = GetActorRotation() + FRotator(0.0f, GetRotationInput(), 0.0f);
+	SetActorRotation(DesiredRot);
 	// Make sure to consume all input on each frame.
 	ConsumeMovementInputVector();
 	ConsumeRotationInput();

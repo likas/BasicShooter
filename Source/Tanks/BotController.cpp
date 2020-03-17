@@ -41,7 +41,7 @@ FVector ABotController::GetNewMovePoint()
 			for (int i = 1; i < TravelPath->PathPoints.Num(); ++i)
 			{
 				TravelPath->PathPoints[i].Z = PawnAsBot->GetActorLocation().Z;
-				//DrawDebugSphere(GetWorld(), TravelPath->PathPoints[i], 10.f, 12, FColor(255, 0, 0), false, 100.f);
+				DrawDebugSphere(GetWorld(), TravelPath->PathPoints[i], 10.f, 12, FColor(255, 0, 0), false, 100.f);
 				TravelPoints.Enqueue(TravelPath->PathPoints[i]);
 				//UE_LOG(LogTemp, Warning, TEXT("%d. Added Random Location: %f %f %f"), i, TravelPath->PathPoints[i].X, TravelPath->PathPoints[i].Y, TravelPath->PathPoints[i].Z);
 				UE_LOG(LogTemp, Warning, TEXT("%d. Added Random Location: %s"), i, *TravelPath->PathPoints[i].ToString());
@@ -49,8 +49,19 @@ FVector ABotController::GetNewMovePoint()
 			
 		}
 	}
-	else return Return;
-	UE_LOG(LogTemp, Log, TEXT("Dequeue successful: %d"), TravelPoints.Dequeue(Return) ? 1 : 0);
+	else
+	{
+		return Return;
+	}
+	bool bDequeueSuccessful = TravelPoints.Dequeue(Return);
+	if(bDequeueSuccessful)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Dequeue successful"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Dequeue failed"));
+	}
 	return Return;
 }
 
@@ -114,56 +125,31 @@ void ABotController::Tick(float DeltaTime)
 	UE_LOG(LogTemp, Log, TEXT("Distance between Dest and Loc: %f"), FVector::DistXY(PawnAsBot->GetActorLocation(), Destination));
 	//Give movement input
 	FVector DestinationVector;
-	if (FVector::DistXY(PawnAsBot->GetActorLocation(), Destination) <= 10.f) {
+	if (FVector::DistXY(PawnAsBot->GetActorLocation(), Destination) <= 3.f) {
 		Destination = GetNewMovePoint();
-		
-		DrawDebugSphere(GetWorld(), Destination, 10.f, 12, FColor(0, 255, 0), false, 100.f);
+
+		//DrawDebugSphere(GetWorld(), Destination, 10.f, 12, FColor(0, 255, 0), false, 100.f);
 	}
 	DestinationVector = (Destination - PawnAsBot->GetActorLocation()).GetSafeNormal();
 	DrawDebugDirectionalArrow(GetWorld(), PawnAsBot->GetActorLocation(), Destination, 30.f, FColor(0, 0, 255), false, 100.f);
-	PawnAsBot->AddMovementInput(FVector(DestinationVector.X, DestinationVector.Y, 0.f));
-	UE_LOG(LogTemp, Log, TEXT("Sending movement to Actor: %s"), *DestinationVector.GetSafeNormal2D().ToString());
+	//PawnAsBot->AddMovementInput(FVector(DestinationVector.X, DestinationVector.Y, 0.f));
+	//UE_LOG(LogTemp, Log, TEXT("Sending movement to Actor: %s"), *DestinationVector.GetSafeNormal2D().ToString());
 
-	//UE_LOG(LogTemp, Log, TEXT("Tick?"));
-	if (false)
+
+	float DotToTarget = FVector::DotProduct(DestinationVector, PawnAsBot->GetActorForwardVector());
+	float SidewaysDotToTarget = FVector::DotProduct(DestinationVector, PawnAsBot->GetActorRightVector());
+	UE_LOG(LogTemp, Log, TEXT("DotProduct is: %f"), DotToTarget);
+	UE_LOG(LogTemp, Log, TEXT("Sideways to dot is: %f"), SidewaysDotToTarget);
+
+	float Angle = PawnAsBot->GetActorForwardVector().Rotation().Yaw - DestinationVector.Rotation().Yaw;
+	UE_LOG(LogTemp, Log, TEXT("Angle is: %f"), Angle);
+	if (FMath::Sign(DotToTarget) != FMath::Sign(SidewaysDotToTarget) && FMath::IsNearlyZero(DotToTarget) && FMath::IsNearlyZero(SidewaysDotToTarget)) { SidewaysDotToTarget += 0.5f; }
+
+		PawnAsBot->AddRotationInput((SidewaysDotToTarget) * 10);
+
+	if (SidewaysDotToTarget <= 0.1)
 	{
-		if (PawnAsBot)
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("PawnAsBot"));
-			if (AActor* Target = PawnAsBot->GetTarget())
-			{
-				// We do have a target. Shamble toward it and attempt violence!
-				FVector DirectionToTarget = (Target->GetActorLocation() - PawnAsBot->GetActorLocation()).GetSafeNormal2D();
-				float DistanceToTarget = FVector::Dist2D(Target->GetActorLocation(), PawnAsBot->GetActorLocation());
-				//FVector Direction; float Length;
-				//DirectionToTarget.ToDirectionAndLength(Direction, Length);
-				UE_LOG(LogTemp, Warning, TEXT("%f"), DistanceToTarget);
-				float DotToTarget = FVector::DotProduct(DirectionToTarget, PawnAsBot->GetActorForwardVector());
-				float SidewaysDotToTarget = FVector::DotProduct(DirectionToTarget, PawnAsBot->GetActorRightVector());
-				//Relative angle to add to where we facing to be where we want to face
-				float DeltaYawDesired = FMath::Atan2(SidewaysDotToTarget, DotToTarget);
-
-				if (PawnAsBot->BotAIShouldAttack())
-				{
-					//UE_LOG(LogTemp, Warning, TEXT("We think we should attack"));
-					PawnAsBot->AddAttackInput();
-				}
-				else //delete this 'else' if we want to move when attacking
-				{
-					//MoveToActor(Target);
-					//UE_LOG(LogTemp, Warning, TEXT("We move"));
-					//Move faster when facing toward the target so that we turn more accurately/don't orbit.
-					PawnAsBot->AddMovementInput(FVector(0.0f, 0.0f, 0.0f), FMath::GetMappedRangeValueClamped(FVector2D(-0.707f, 0.707f), FVector2D(0.0f, 1.0f), DotToTarget));
-					// Attempt the entire turn in one frame. The Zombie itself will cap this, we're only expressing our desired turn amount here.
-					PawnAsBot->AddRotationInput(DeltaYawDesired);
-				}
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("NoTarget"));
-			}
-
-		}
+		PawnAsBot->AddMovementInput(FVector(DestinationVector.X, DestinationVector.Y, 0.f));
 	}
 }
 
