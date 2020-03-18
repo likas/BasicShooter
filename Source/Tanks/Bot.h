@@ -30,6 +30,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	/** The name of the socket at the muzzle - used for spawning missiles. */
+	static const FName MuzzleSocketName;
+
 	// Set this Bot's target. The base version of this function will handle updating TargetActor and TargetTank appropriately. Input parameter can be NULL.
 	UFUNCTION(BlueprintCallable, Category = "AI")
 		void SetTarget(AActor* NewTarget);
@@ -51,6 +54,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "AI")
 		bool BotAIShouldAttack();
 	virtual bool BotAIShouldAttack_Implementation();
+
+	// This function asks the Bot if it is in position to attack its current target. It does not actually command the Bot to attack.
+	UFUNCTION(BlueprintNativeEvent, Category = "AI")
+		bool BotAITargetInSight();
+	virtual bool BotAITargetInSight_Implementation();
 
 	//~
 	//~ New Bot Input
@@ -85,6 +93,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bot", meta = (AllowPrivateAccess = "true"))
 		UArrowComponent* BotDirection;
 
+	// Sprite for the tank body.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bot", meta = (AllowPrivateAccess = "true"))
+		class UPaperSpriteComponent* BotSprite;
+
 	/* The actor we're targeting. Will be NULL if there is no target. */
 	UPROPERTY(VisibleInstanceOnly, Category = "AI")
 		AActor* TargetActor;
@@ -103,6 +115,9 @@ protected:
 	/** Camera effect, if any, to play when the player is hit by this Bot. */
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<UCameraShake> HitShake;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bot")
+		TSubclassOf<AActor> Projectile;
 
 	/** Current health value. Might be fun to have different values for different attack types, e.g. fire, explosions, etc. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bot", meta = (ClampMin = "0.0"))

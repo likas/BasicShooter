@@ -27,7 +27,8 @@ FVector ABotController::GetNewMovePoint()
 		auto NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
 		UNavigationPath* TravelPath;
 
-		auto randPoint = NavSystem->GetRandomPointInNavigableRadius(GWorld, PawnAsBot->GetActorLocation(), 1000);
+		auto randPoint = NavSystem->GetRandomPointInNavigableRadius(GWorld, PawnAsBot->GetActorLocation(),
+			FMath::RandRange(100, 1000));
 
 		randPoint.Z = PawnAsBot->GetActorLocation().Z;
 		//UE_LOG(LogTemp, Warning, TEXT("New Random Location: %f %f %f"), randPoint.X, randPoint.Y, randPoint.Z);
@@ -122,34 +123,76 @@ void ABotController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowin
 
 void ABotController::Tick(float DeltaTime)
 {
-	UE_LOG(LogTemp, Log, TEXT("Distance between Dest and Loc: %f"), FVector::DistXY(PawnAsBot->GetActorLocation(), Destination));
-	//Give movement input
-	FVector DestinationVector;
-	if (FVector::DistXY(PawnAsBot->GetActorLocation(), Destination) <= 3.f) {
-		Destination = GetNewMovePoint();
+	UE_LOG(LogTemp, Log, TEXT("We tick"));
+	//If we "see player"
+	if (PawnAsBot->BotAITargetInSight())
+	//if(false)
+	{
+		//If the trajectory of our sight is intercepting with a player's body sprite
+		if (PawnAsBot->BotAIShouldAttack()) 
+		{
+			PawnAsBot->AddAttackInput();
+		}
+		
+		//get angle to target
+		//FVector DestinationVector = PawnAsBot->GetTarget()->GetActorLocation() - PawnAsBot->GetActorLocation();
+		FVector DestinationVector = PawnAsBot->GetActorLocation() - PawnAsBot->GetTarget()->GetActorLocation();
+		float DotToTarget = FVector::DotProduct(DestinationVector.GetSafeNormal(), PawnAsBot->GetActorForwardVector());
+		//float SidewaysDotToTarget = FVector::DotProduct(DestinationVector.GetSafeNormal(), PawnAsBot->GetActorRightVector().RotateAngleAxis(180.f, PawnAsBot->GetTransform().GetUnitAxis(EAxis::X)));
+		float SidewaysDotToTarget = FVector::DotProduct(DestinationVector.GetSafeNormal(), PawnAsBot->GetActorRightVector());
+		float Angle = FMath::RadiansToDegrees( FMath::Acos(DotToTarget) );
 
-		//DrawDebugSphere(GetWorld(), Destination, 10.f, 12, FColor(0, 255, 0), false, 100.f);
+		UE_LOG(LogTemp, Log, TEXT("Angle to target is: %f"), Angle);
+		PawnAsBot->AddRotationInput(SidewaysDotToTarget * 10);
+		PawnAsBot->AddMovementInput(FVector(DestinationVector.GetSafeNormal().X, DestinationVector.GetSafeNormal().Y, 0.f));
+
+
+		if (Angle < 40)
+		{
+			//rotate so it's enough to shoot
+		}
+		else if (Angle > 40 && Angle < 90) {
+			//
+		}
+		else
+		{
+			//flee backwards
+		}
+
 	}
-	DestinationVector = (Destination - PawnAsBot->GetActorLocation()).GetSafeNormal();
-	DrawDebugDirectionalArrow(GetWorld(), PawnAsBot->GetActorLocation(), Destination, 30.f, FColor(0, 0, 255), false, 100.f);
-	//PawnAsBot->AddMovementInput(FVector(DestinationVector.X, DestinationVector.Y, 0.f));
-	//UE_LOG(LogTemp, Log, TEXT("Sending movement to Actor: %s"), *DestinationVector.GetSafeNormal2D().ToString());
+	else 
+	{
+		UE_LOG(LogTemp, Log, TEXT("Distance between Dest and Loc: %f"), FVector::DistXY(PawnAsBot->GetActorLocation(), Destination));
+		//Give movement input
+		FVector DestinationVector;
+		if (FVector::DistXY(PawnAsBot->GetActorLocation(), Destination) <= 3.f) {
+			Destination = GetNewMovePoint();
+
+			//DrawDebugSphere(GetWorld(), Destination, 10.f, 12, FColor(0, 255, 0), false, 100.f);
+		}
+		DestinationVector = (Destination - PawnAsBot->GetActorLocation()).GetSafeNormal();
+		DrawDebugDirectionalArrow(GetWorld(), PawnAsBot->GetActorLocation(), Destination, 30.f, FColor(0, 0, 255), false, 100.f);
+		//PawnAsBot->AddMovementInput(FVector(DestinationVector.X, DestinationVector.Y, 0.f));
+		//UE_LOG(LogTemp, Log, TEXT("Sending movement to Actor: %s"), *DestinationVector.GetSafeNormal2D().ToString());
 
 
-	float DotToTarget = FVector::DotProduct(DestinationVector, PawnAsBot->GetActorForwardVector());
-	float SidewaysDotToTarget = FVector::DotProduct(DestinationVector, PawnAsBot->GetActorRightVector());
-	UE_LOG(LogTemp, Log, TEXT("DotProduct is: %f"), DotToTarget);
-	UE_LOG(LogTemp, Log, TEXT("Sideways to dot is: %f"), SidewaysDotToTarget);
+		float DotToTarget = FVector::DotProduct(DestinationVector, PawnAsBot->GetActorForwardVector());
+		float SidewaysDotToTarget = FVector::DotProduct(DestinationVector, PawnAsBot->GetActorRightVector());
+		UE_LOG(LogTemp, Log, TEXT("DotProduct is: %f"), DotToTarget);
+		UE_LOG(LogTemp, Log, TEXT("Sideways to dot is: %f"), SidewaysDotToTarget);
 
-	float Angle = PawnAsBot->GetActorForwardVector().Rotation().Yaw - DestinationVector.Rotation().Yaw;
-	UE_LOG(LogTemp, Log, TEXT("Angle is: %f"), Angle);
-	if (FMath::Sign(DotToTarget) != FMath::Sign(SidewaysDotToTarget) && FMath::IsNearlyZero(DotToTarget) && FMath::IsNearlyZero(SidewaysDotToTarget)) { SidewaysDotToTarget += 0.5f; }
+		float Angle = PawnAsBot->GetActorForwardVector().Rotation().Yaw - DestinationVector.Rotation().Yaw;
+		float Acos = FMath::RadiansToDegrees( FMath::Acos(DotToTarget) );
+		UE_LOG(LogTemp, Warning, TEXT("Angle and Acos is: %f, %f"), Angle, Acos);
+	
+		if (FMath::Sign(DotToTarget) != FMath::Sign(SidewaysDotToTarget) && FMath::IsNearlyZero(DotToTarget) && FMath::IsNearlyZero(SidewaysDotToTarget)) { SidewaysDotToTarget += 0.5f; }
 
 		PawnAsBot->AddRotationInput((SidewaysDotToTarget) * 10);
 
-	if (SidewaysDotToTarget <= 0.1)
-	{
-		PawnAsBot->AddMovementInput(FVector(DestinationVector.X, DestinationVector.Y, 0.f));
+		if (SidewaysDotToTarget <= 0.1)
+		{
+			PawnAsBot->AddMovementInput(FVector(DestinationVector.X, DestinationVector.Y, 0.f));
+		}
 	}
 }
 

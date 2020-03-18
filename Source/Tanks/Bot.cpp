@@ -5,7 +5,10 @@
 #include "Tank.h"
 #include "GameFramework/Pawn.h"
 #include "Math/Vector.h"
+#include "Missile.h"
+#include "PaperSpriteComponent.h"
 
+const FName ABot::MuzzleSocketName(TEXT("GunBarrel"));
 
 // Sets default values
 ABot::ABot()
@@ -13,13 +16,21 @@ ABot::ABot()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	if (!RootComponent)
+	{
+		RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("BotBase"));
+	}
+
 	BotDirection = CreateDefaultSubobject<UArrowComponent>(TEXT("BotDirection"));
-	BotDirection->SetupAttachment(RootComponent);
+	BotDirection->SetupAttachment(BotSprite);
+
+	BotSprite = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("BotSprite"));
+	BotSprite->SetupAttachment(RootComponent);
 
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	Health = 100.f;
-	SightDistance = 500.f;
+	SightDistance = 300.f;
 	SightAngle = 180.f;
 	YawSpeed = 90.f;
 	WalkSpeed = 100.f;
@@ -34,6 +45,15 @@ void ABot::BeginPlay()
 {
 	Super::BeginPlay();
 	AActor* Target = UGameplayStatics::GetPlayerPawn(this, 0); SetTarget(Target);
+	//Check if target is a tank
+	if (ATank* TargetAsTank = Cast<ATank>(Target)) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Target is A TANK"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Target is NOT a tank"));
+	}
 }
 
 // Called every frame
@@ -41,8 +61,9 @@ void ABot::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-
 	//BotAI(DeltaTime);
+
+	BotAIShouldAttack();
 
 	FVector PendingMovement = GetPendingMovementInputVector();
 	UE_LOG(LogTemp, Log, TEXT("Movement in Actor: %s"), *PendingMovement.ToString());
@@ -147,23 +168,53 @@ void ABot::BotAI_Implementation(float DeltaSeconds)
 
 bool ABot::BotAIShouldAttack_Implementation()
 {
-	if (AActor* Target = GetTarget())
-	{
-		// Attack our target if we're in range (distance and angle). For now, we'll use our unmodified attack variables for this.
-		FVector OurLocation = GetActorLocation();
-		FVector DirectionToTarget = (Target->GetActorLocation() - OurLocation).GetSafeNormal2D();
-		float DotToTarget = FVector::DotProduct(DirectionToTarget, GetActorForwardVector());
-		if (DotToTarget >= FMath::Cos(FMath::DegreesToRadians(AttackAngle)))
+	//BotAIShouldPow!
+	if (AActor* Target = GetTarget()) {
+		UE_LOG(LogTemp, Log, TEXT("I have the target!"));
+		//if have a visual
+		float DistanceToTarget = FVector::DistXY(Target->GetActorLocation(), GetActorLocation());
+		if (DistanceToTarget <= SightDistance)
 		{
-			float DistSqXY = FVector::DistSquaredXY(Target->GetActorLocation(), OurLocation);
-			if (DistSqXY <= (AttackDistance * AttackDistance))
+			FVector OurLocation = GetActorLocation();
+			FVector DirectionToTarget = (Target->GetActorLocation() - OurLocation).GetSafeNormal2D();
+			float DotToTarget = FVector::DotProduct(DirectionToTarget, GetActorForwardVector());
+			if (DotToTarget >= FMath::Cos(FMath::DegreesToRadians(AttackAngle)))
 			{
-				// Note that attacking cooldown isn't checked. We don't want this kind of Bot to move between attacks or think it's not attacking while waiting for the cooldown.
-				return true;
+				UE_LOG(LogTemp, Log, TEXT("Have visual on the target!"));
+				//Check if the shot is clear
+				FHitResult OutHit;
+				FCollisionShape CollisionShape;
+				CollisionShape.SetCapsule(10.f, 8.f);
+				//if (GetWorld()->SweepSingleByProfile(OutHit, BotSprite->GetSocketLocation(MuzzleSocketName), Target->GetActorLocation(), FQuat::Identity, "Bullet", CollisionShape))
+				if (GetWorld()->SweepSingleByProfile(OutHit, BotDirection->GetComponentLocation(), BotDirection->GetComponentLocation() + FVector(GetActorForwardVector().X * DistanceToTarget, GetActorForwardVector().Y * DistanceToTarget, 0.f), FQuat::Identity, "Bullet", CollisionShape))
+				{
+					DrawDebugDirectionalArrow(GetWorld(), BotDirection->GetComponentLocation(), BotDirection->GetComponentLocation() + FVector(GetActorForwardVector().X * DistanceToTarget, GetActorForwardVector().Y * DistanceToTarget, 0.f), 30.f, FColor(255, 0, 0), false, 100.f);
+					if (ATank* HitActor = Cast<ATank>(OutHit.GetActor()))
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Hit that bastard!"));
+					}
+					else if (ABot* Ourself = Cast<ABot>(OutHit.GetActor()))
+					{
+						UE_LOG(LogTemp, Warning, TEXT("I shot my leg! Bwaaa!!"));
+					}
+					else
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Something is blocking the shot"));
+					}
+				}
 			}
 		}
 	}
-	return false;
+	return true;
+}
+
+bool ABot::BotAITargetInSight_Implementation() {
+	float DistanceToTarget = FVector::DistXY(GetTarget()->GetActorLocation(), GetActorLocation());
+	if (DistanceToTarget <= SightDistance)
+	{
+		return true;
+	}
+	else return false;
 }
 
 void ABot::SetTarget(AActor* NewTarget)

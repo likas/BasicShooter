@@ -73,7 +73,8 @@ ATank::ATank()
 	CameraComponent->bUsePawnControlRotation = false;
 	CameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
 	CameraComponent->OrthoWidth = 1024.f;
-	CameraComponent->AspectRatio = 3.f / 4.f;
+	CameraComponent->AspectRatio = 1.f;
+	CameraComponent->bConstrainAspectRatio = true;
 	CameraComponent->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	CameraComponent->SetWorldRotation(FRotator(0.f, 0.f, 0.f)); // Fixed on creation
 
