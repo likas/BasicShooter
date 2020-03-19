@@ -18,8 +18,6 @@ public:
 protected:
 	void Explode();
 
-	FTimerHandle ExplodeTimerHandle;
-
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -37,13 +35,8 @@ public:
 	/** This missile's radius for collisions. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 		float Radius;
-	/** This missile's lifespan */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-		float Lifespan;
 
-
-
-	/** Describes what this missile hits. */
+	/** Custom collision profile name for bullet (missile) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 		FName MovementCollisionProfile;
 
@@ -51,6 +44,8 @@ private:
 	// Sprite for the Missile.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Missile", meta = (AllowPrivateAccess = "true"))
 		class UPaperSpriteComponent* MissileSprite;
+
+	/* Indicates whether the collision occured on previous tick */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile", meta = (AllowPrivateAccess = "true"))
 		bool HasCollidedOnPreviousTick;
 };

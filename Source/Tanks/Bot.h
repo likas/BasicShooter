@@ -20,21 +20,13 @@ public:
 	// Sets default values for this pawn's properties
 	ABot();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	/** The name of the socket at the muzzle - used for spawning missiles. */
-	static const FName MuzzleSocketName;
-
-	// Set this Bot's target. The base version of this function will handle updating TargetActor and TargetTank appropriately. Input parameter can be NULL.
+	// Set this Bot's target. The base version of this function will handle updating TargetActor appropriately. Input parameter can be NULL.
 	UFUNCTION(BlueprintCallable, Category = "AI")
 		void SetTarget(AActor* NewTarget);
 
@@ -44,20 +36,11 @@ public:
 
 	// Return the target Actor as a Tank, if possible. Returning NULL indicates no target, or that the target is not a Tank.
 	UFUNCTION(BlueprintCallable, Category = "AI")
-		ATank* GetTargetAsTank();
-
-	// Return the target Actor as a Tank, if possible. Returning NULL indicates no target, or that the target is not a Tank.
-	UFUNCTION(BlueprintCallable, Category = "AI")
 		bool IsDead();
-
-	// Bots will call this on Tick.
-	UFUNCTION(BlueprintNativeEvent, Category = "AI")
-		void BotAI(float DeltaSeconds);
-	virtual void BotAI_Implementation(float DeltaSeconds);
 
 	// This function asks the Bot if there's an obstacle blocking the way.
 	UFUNCTION(BlueprintNativeEvent, Category = "AI")
-		bool BotAIObstacleInTheWay(FVector &NormalToObstacle);
+		bool BotAIObstacleInTheWay(FVector& NormalToObstacle);
 	virtual bool  BotAIObstacleInTheWay_Implementation(FVector& NormalToObstacle);
 
 	// This function asks the Bot if it is in position to attack its current target. It does not actually command the Bot to attack.
@@ -107,7 +90,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bot", meta = (AllowPrivateAccess = "true"))
 		UArrowComponent* BotDirection;
 
-	// Sprite for the tank body.
+	// Sprite for the body.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bot", meta = (AllowPrivateAccess = "true"))
 		class UPaperSpriteComponent* BotSprite;
 
@@ -119,10 +102,6 @@ private:
 	UPROPERTY(VisibleInstanceOnly, Category = "AI")
 		AActor* TargetActor;
 
-	/* The actor we're targeting, cast to a Tank and cached. Will be NULL if no target or if the target actor is not a Tank. */
-	UPROPERTY(VisibleInstanceOnly, Category = "AI")
-		ATank* TargetTank;
-
 	// Current rotation input.
 	float YawInput;
 
@@ -130,22 +109,19 @@ private:
 	uint32 bAttackInput : 1;
 
 protected:
-	/** Camera effect, if any, to play when the player is hit by this Bot. */
-	UPROPERTY(EditAnywhere)
-		TSubclassOf<UCameraShake> HitShake;
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 
+
+	/* We shoot with this. Don't forget to set it in blueprints */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bot")
 		TSubclassOf<AActor> Projectile;
 
-	/** Current health value. Might be fun to have different values for different attack types, e.g. fire, explosions, etc. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bot", meta = (ClampMin = "0.0"))
-		float Health;
-
-	/** Sight distance (when no target is present) */
+	/** Sight distance */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bot", meta = (ClampMin = "0.0"))
 		float SightDistance;
 
-	/** Sight half-angle in degrees (when no target is present) */
+	/** Sight half-angle in degrees */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bot", meta = (ClampMin = "0.0"))
 		float SightAngle;
 
@@ -153,13 +129,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bot", meta = (ClampMin = "0.0"))
 		float YawSpeed;
 
-	/** Speed when wandering around, or when facing away from target. */
+	/** Speed when wandering around */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bot", meta = (ClampMin = "0.0"))
 		float WalkSpeed;
-
-	/** Speed when rushing toward target. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bot", meta = (ClampMin = "0.0"))
-		float RunSpeed;
 
 	/** Attack distance. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bot", meta = (ClampMin = "0.0"))
@@ -177,5 +149,6 @@ protected:
 	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadWrite, Category = "Bot")
 		float AttackAvailableTime;
 
-	bool bIsKilled;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
+		bool bIsKilled;
 };

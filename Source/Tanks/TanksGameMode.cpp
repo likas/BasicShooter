@@ -7,33 +7,29 @@
 #include "TanksGameInstance.h"
 #include "Bot.h"
 
-ATanksGameMode::ATanksGameMode() 
-{
-	TankScore = 0;
-	BotScore = 0;
-}
 
 void ATanksGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	ATank* MyCharacter = Cast<ATank>(UGameplayStatics::GetPlayerPawn(this, 0));
-	/*TArray<AActor> *Bots;
-	UGameplayStatics::GetAllActorsOfClass(this, ABot::StaticClass(), Bots);*/
+	ABot* Bot = Cast<ABot>(UGameplayStatics::GetActorOfClass(this, ABot::StaticClass()));
+	/*
+	// TODO multiple bots
+	TArray<AActor*> Bots;
+	UGameplayStatics::GetAllActorsOfClass(this, ABot::StaticClass(), Bots);
+	*/
 
 	UTanksGameInstance* TGI;
+	
+	/* If someone get shot, increase opposite side's points, restart the game */
 
-
-	ABot* Bot = Cast<ABot>( UGameplayStatics::GetActorOfClass(this, ABot::StaticClass()) );
 	if (MyCharacter->IsDead())
 	{
 		TGI = Cast<UTanksGameInstance>(GetGameInstance());
 		TGI->SetBotScore();
 		UE_LOG(LogTemp, Log, TEXT("Tank death registered"));
 		RestartGame();
-		//RestartPlayerAtTransform(MyCharacter->GetController(), MyCharacter->GetStartPoint());
-
-		//RestartPlayerAtPlayerStart(Bot->GetController());
 	}
 
 	if (Bot->IsDead())
@@ -42,7 +38,6 @@ void ATanksGameMode::Tick(float DeltaTime)
 		TGI->SetTankScore();
 		UE_LOG(LogTemp, Log, TEXT("Bot death registered"));
 		RestartGame();
-
 	}
 }
 
@@ -59,24 +54,4 @@ void ATanksGameMode::BeginPlay()
 		}
 	}
 
-}
-
-int32 ATanksGameMode::GetTankScore() const
-{
-	return TankScore;
-}
-
-int32 ATanksGameMode::GetBotScore() const
-{
-	return BotScore;
-}
-
-void ATanksGameMode::SetTankScore()
-{
-	TankScore += 1;
-}
-
-void ATanksGameMode::SetBotScore()
-{
-	BotScore += 1;
 }

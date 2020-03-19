@@ -8,7 +8,7 @@
 #include "Wall.generated.h"
 
 /**
- * 
+ * Invisible wall for the game field
  */
 UCLASS()
 class TANKS_API AWall : public AStaticMeshActor

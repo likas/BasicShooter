@@ -4,8 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-//#include "PaperSpriteComponent.h"
-#include <Runtime\Engine\Classes\Components\ArrowComponent.h>
+#include "Components/ArrowComponent.h"
 #include "Camera/CameraComponent.h"
 #include "IKillableInterface.h"
 #include "Tank.generated.h"
@@ -50,26 +49,6 @@ public:
 	// Sets default values for this pawn's properties
 	ATank();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-	//Input structure
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank Input")
-		FTankInput TankInput;
-
-	//Maximum turn rate (degrees/seconds) of the tank
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tank", meta = (ClampMin = "0.0"))
-		float YawSpeed;
-
-	//Maximum movement rate (sentimeters/seconds) of the tank
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tank", meta = (ClampMin = "0.0"))
-		float MoveSpeed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tank")
-		TSubclassOf<AActor> Projectile;
-
-public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -84,8 +63,27 @@ public:
 
 	bool IsDead();
 
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	//Input structure
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank Input")
+		FTankInput TankInput;
+
+	//Maximum turn rate (degrees/second) of the tank
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tank", meta = (ClampMin = "0.0"))
+		float YawSpeed;
+
+	//Maximum movement rate (units/second) of the tank
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tank", meta = (ClampMin = "0.0"))
+		float MoveSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tank")
+		TSubclassOf<AActor> Projectile;
+
 private:
-	//Dont have to be the same as in mappings
+	//Don't have to be the same as in mappings
 
 	void MoveForwardPressed();
 	void MoveForwardReleased();
@@ -104,7 +102,7 @@ private:
 
 	// Helpful debug tool - which way is the tank facing?
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
-	UArrowComponent* TankDirection;
+		UArrowComponent* TankDirection;
 
 	// Sprite for the tank body.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
@@ -114,22 +112,18 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
 		class UBoxComponent* TankBody;
 
-
 	//In-game camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* CameraComponent;
 
-	UFUNCTION()
-		void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
-
 	// If this value is greater than the current game time, Fire1 is ignored because it has been fired too recently.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turret", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
 		float Fire1ReadyTime;
 
 	// Time to delay between Fire1 commands.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turret", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
 		float Fire1Cooldown;
 
-private:
-	bool bIsKilled;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
+		bool bIsKilled;
 };
