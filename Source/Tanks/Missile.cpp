@@ -37,7 +37,7 @@ void AMissile::BeginPlay()
 {
 	Super::BeginPlay();
 	UE_LOG(LogTemp, Log, TEXT("Missile message"));
-	GetWorldTimerManager().SetTimer(ExplodeTimerHandle, this, &AMissile::Explode, Lifespan);
+	//GetWorldTimerManager().SetTimer(ExplodeTimerHandle, this, &AMissile::Explode, Lifespan);
 }
 
 // Called every frame
@@ -70,9 +70,14 @@ void AMissile::Tick(float DeltaTime)
 			//UE_LOG(LogTemp, Log, TEXT("Bumped into %s"), *OutHit.GetActor()->GetActorLabel());
 			HasCollidedOnPreviousTick = true;
 
-			if(IKillableInterface* ItBleeds = Cast<IKillableInterface>(OutHit.GetActor()))
+			if (IKillableInterface* ItBleeds = Cast<IKillableInterface>(OutHit.GetActor()))
 			{
 				ItBleeds->GetShot();
+				Explode();
+			}
+			else if (OutHit.GetActor()->GetActorLabel() == "Cube4" || OutHit.GetActor()->GetActorLabel() == "Cube5" || OutHit.GetActor()->GetActorLabel() == "Cube6" || OutHit.GetActor()->GetActorLabel() == "Cube7")
+			{
+				//UE_LOG(LogTemp, Log, TEXT("Tag Wall"));
 				Explode();
 			}
 

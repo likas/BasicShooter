@@ -102,7 +102,6 @@ void ATank::BeginPlay()
 {
 	Super::BeginPlay();
 	bIsKilled = false;
-	StartPoint = GetTransform();
 }
 
 // Called every frame
@@ -218,11 +217,6 @@ void ATank::GetShot()
 bool ATank::IsDead() 
 {
 	return bIsKilled;
-}
-
-FTransform ATank::GetStartPoint()
-{
-	return StartPoint;
 }
 
 // Called to bind functionality to input

@@ -83,7 +83,6 @@ public:
 	//~ End interface
 
 	bool IsDead();
-	FTransform GetStartPoint();
 
 private:
 	//Dont have to be the same as in mappings
@@ -134,5 +133,4 @@ private:
 
 private:
 	bool bIsKilled;
-	FTransform StartPoint;
 };

@@ -81,7 +81,8 @@ void ABot::Tick(float DeltaTime)
 				float CurrentTime = World->GetTimeSeconds();
 				if (AttackAvailableTime <= CurrentTime)
 				{
-					FVector Loc = BotDirection->GetComponentLocation();
+					FVector Loc = GetActorLocation() + FVector(BotDirection->GetForwardVector().X * 70.f, BotDirection->GetForwardVector().Y * 70.f, 0.f);
+					//FVector Loc = BotDirection->GetComponentLocation();
 					FRotator Rot = BotDirection->GetComponentRotation();
 					if (AActor* NewProjectile = World->SpawnActor(Projectile))
 					{
@@ -221,6 +222,7 @@ bool ABot::BotAIShouldAttack_Implementation()
 				//if (GetWorld()->SweepSingleByProfile(OutHit, BotSprite->GetSocketLocation(MuzzleSocketName), Target->GetActorLocation(), FQuat::Identity, "Bullet", CollisionShape))
 				if (GetWorld()->SweepSingleByProfile(OutHit, BotDirection->GetComponentLocation(), BotDirection->GetComponentLocation() + FVector(GetActorForwardVector().X * DistanceToTarget, GetActorForwardVector().Y * DistanceToTarget, 0.f), FQuat::Identity, "Bullet", CollisionShape))
 				{
+					return true;
 					DrawDebugDirectionalArrow(GetWorld(), BotDirection->GetComponentLocation(), BotDirection->GetComponentLocation() + FVector(GetActorForwardVector().X * DistanceToTarget, GetActorForwardVector().Y * DistanceToTarget, 0.f), 30.f, FColor(255, 0, 0), false, 100.f);
 					if (ATank* HitActor = Cast<ATank>(OutHit.GetActor()))
 					{

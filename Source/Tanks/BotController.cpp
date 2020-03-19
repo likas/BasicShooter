@@ -134,7 +134,7 @@ void ABotController::Tick(float DeltaTime)
 	if (PawnAsBot->BotAITargetInSight())
 	//if(false)
 	{
-		PawnAsBot->AddAttackInput();
+		Destination = GetNewMovePoint();
 		//If the trajectory of our sight is intercepting with a player's body sprite
 		if (PawnAsBot->BotAIShouldAttack()) 
 		{
@@ -152,7 +152,6 @@ void ABotController::Tick(float DeltaTime)
 		bBlockedByObstacle = PawnAsBot->BotAIObstacleInTheWay(NormalToObstacle);
 		if (bBlockedByObstacle)
 		{
-			
 			DestinationVector = NormalToObstacle.RightVector;
 		}
 		float DotToTarget = FVector::DotProduct(DestinationVector.GetSafeNormal(), PawnAsBot->GetActorForwardVector());
@@ -167,7 +166,6 @@ void ABotController::Tick(float DeltaTime)
 		if (!bBlockedByObstacle) {
 			PawnAsBot->AddMovementInput(FVector(DestinationVector.GetSafeNormal().X, DestinationVector.GetSafeNormal().Y, 0.f));
 		}
-
 
 		if (Angle < 40)
 		{
@@ -187,7 +185,8 @@ void ABotController::Tick(float DeltaTime)
 		UE_LOG(LogTemp, Log, TEXT("Distance between Dest and Loc: %f"), FVector::DistXY(PawnAsBot->GetActorLocation(), Destination));
 		//Give movement input
 		FVector DestinationVector;
-		if (FVector::DistXY(PawnAsBot->GetActorLocation(), Destination) <= 3.f) {
+		FVector Normal;
+		if (FVector::DistXY(PawnAsBot->GetActorLocation(), Destination) <= 3.f || PawnAsBot->BotAIObstacleInTheWay(Normal)) {
 			Destination = GetNewMovePoint();
 
 			//DrawDebugSphere(GetWorld(), Destination, 10.f, 12, FColor(0, 255, 0), false, 100.f);

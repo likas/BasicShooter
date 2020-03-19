@@ -4,6 +4,7 @@
 #include "TanksGameMode.h"
 #include "Blueprint/UserWidget.h"
 #include "Tank.h"
+#include "TanksGameInstance.h"
 #include "Bot.h"
 
 ATanksGameMode::ATanksGameMode() 
@@ -20,10 +21,14 @@ void ATanksGameMode::Tick(float DeltaTime)
 	/*TArray<AActor> *Bots;
 	UGameplayStatics::GetAllActorsOfClass(this, ABot::StaticClass(), Bots);*/
 
+	UTanksGameInstance* TGI;
+
+
 	ABot* Bot = Cast<ABot>( UGameplayStatics::GetActorOfClass(this, ABot::StaticClass()) );
 	if (MyCharacter->IsDead())
 	{
-		BotScore += 1;
+		TGI = Cast<UTanksGameInstance>(GetGameInstance());
+		TGI->SetBotScore();
 		UE_LOG(LogTemp, Log, TEXT("Tank death registered"));
 		RestartGame();
 		//RestartPlayerAtTransform(MyCharacter->GetController(), MyCharacter->GetStartPoint());
@@ -33,8 +38,11 @@ void ATanksGameMode::Tick(float DeltaTime)
 
 	if (Bot->IsDead())
 	{
-		TankScore += 1;
+		TGI = Cast<UTanksGameInstance>(GetGameInstance());
+		TGI->SetTankScore();
 		UE_LOG(LogTemp, Log, TEXT("Bot death registered"));
+		RestartGame();
+
 	}
 }
 
