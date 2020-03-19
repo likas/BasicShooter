@@ -3,6 +3,7 @@
 #include "Missile.h"
 #include "Tanks.h"
 #include "Paper2D/Classes/PaperSpriteComponent.h"
+#include "IKillableInterface.h"
 #include <Runtime\Engine\Classes\Kismet\KismetMathLibrary.h>
 #include "Math/UnrealMathUtility.h"
 //#include <Runtime\Core\Private\Math\UnrealMath.cpp>
@@ -66,7 +67,14 @@ void AMissile::Tick(float DeltaTime)
 		/*UE_LOG(LogTemp, Log, TEXT("Ret = %x"), Ret);*/
 		if (HasCollided && !HasCollidedOnPreviousTick)
 		{
+			//UE_LOG(LogTemp, Log, TEXT("Bumped into %s"), *OutHit.GetActor()->GetActorLabel());
 			HasCollidedOnPreviousTick = true;
+
+			if(IKillableInterface* ItBleeds = Cast<IKillableInterface>(OutHit.GetActor()))
+			{
+				ItBleeds->GetShot();
+				Explode();
+			}
 
 			SetActorEnableCollision(false);
 			//OutHit.Actor.Get()->SetActorEnableCollision(false);

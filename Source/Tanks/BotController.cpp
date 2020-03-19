@@ -124,10 +124,17 @@ void ABotController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowin
 void ABotController::Tick(float DeltaTime)
 {
 	UE_LOG(LogTemp, Log, TEXT("We tick"));
+	FVector NormalToObstacle;
+	bool bBlockedByObstacle = PawnAsBot->BotAIObstacleInTheWay(NormalToObstacle);
+	if(bBlockedByObstacle)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Obstacle!"));
+	}
 	//If we "see player"
 	if (PawnAsBot->BotAITargetInSight())
 	//if(false)
 	{
+		PawnAsBot->AddAttackInput();
 		//If the trajectory of our sight is intercepting with a player's body sprite
 		if (PawnAsBot->BotAIShouldAttack()) 
 		{
@@ -136,15 +143,30 @@ void ABotController::Tick(float DeltaTime)
 		
 		//get angle to target
 		//FVector DestinationVector = PawnAsBot->GetTarget()->GetActorLocation() - PawnAsBot->GetActorLocation();
-		FVector DestinationVector = PawnAsBot->GetActorLocation() - PawnAsBot->GetTarget()->GetActorLocation();
+
+		FVector DestinationVector;
+		
+
+		DestinationVector = PawnAsBot->GetActorLocation() - PawnAsBot->GetTarget()->GetActorLocation();
+		
+		bBlockedByObstacle = PawnAsBot->BotAIObstacleInTheWay(NormalToObstacle);
+		if (bBlockedByObstacle)
+		{
+			
+			DestinationVector = NormalToObstacle.RightVector;
+		}
 		float DotToTarget = FVector::DotProduct(DestinationVector.GetSafeNormal(), PawnAsBot->GetActorForwardVector());
 		//float SidewaysDotToTarget = FVector::DotProduct(DestinationVector.GetSafeNormal(), PawnAsBot->GetActorRightVector().RotateAngleAxis(180.f, PawnAsBot->GetTransform().GetUnitAxis(EAxis::X)));
 		float SidewaysDotToTarget = FVector::DotProduct(DestinationVector.GetSafeNormal(), PawnAsBot->GetActorRightVector());
 		float Angle = FMath::RadiansToDegrees( FMath::Acos(DotToTarget) );
 
 		UE_LOG(LogTemp, Log, TEXT("Angle to target is: %f"), Angle);
+		
+
 		PawnAsBot->AddRotationInput(SidewaysDotToTarget * 10);
-		PawnAsBot->AddMovementInput(FVector(DestinationVector.GetSafeNormal().X, DestinationVector.GetSafeNormal().Y, 0.f));
+		if (!bBlockedByObstacle) {
+			PawnAsBot->AddMovementInput(FVector(DestinationVector.GetSafeNormal().X, DestinationVector.GetSafeNormal().Y, 0.f));
+		}
 
 
 		if (Angle < 40)
@@ -186,12 +208,13 @@ void ABotController::Tick(float DeltaTime)
 		UE_LOG(LogTemp, Warning, TEXT("Angle and Acos is: %f, %f"), Angle, Acos);
 	
 		if (FMath::Sign(DotToTarget) != FMath::Sign(SidewaysDotToTarget) && FMath::IsNearlyZero(DotToTarget) && FMath::IsNearlyZero(SidewaysDotToTarget)) { SidewaysDotToTarget += 0.5f; }
-
 		PawnAsBot->AddRotationInput((SidewaysDotToTarget) * 10);
 
 		if (SidewaysDotToTarget <= 0.1)
 		{
-			PawnAsBot->AddMovementInput(FVector(DestinationVector.X, DestinationVector.Y, 0.f));
+			if (!bBlockedByObstacle) {
+				PawnAsBot->AddMovementInput(FVector(DestinationVector.X, DestinationVector.Y, 0.f));
+			}
 		}
 	}
 }

@@ -6,12 +6,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "Components/ArrowComponent.h"
+#include "IKillableInterface.h"
 #include "Bot.generated.h"
 
 class ATank;
 
 UCLASS()
-class TANKS_API ABot : public APawn
+class TANKS_API ABot : public APawn, public IKillableInterface
 {
 	GENERATED_BODY()
 
@@ -45,20 +46,33 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "AI")
 		ATank* GetTargetAsTank();
 
+	// Return the target Actor as a Tank, if possible. Returning NULL indicates no target, or that the target is not a Tank.
+	UFUNCTION(BlueprintCallable, Category = "AI")
+		bool IsDead();
+
 	// Bots will call this on Tick.
 	UFUNCTION(BlueprintNativeEvent, Category = "AI")
 		void BotAI(float DeltaSeconds);
 	virtual void BotAI_Implementation(float DeltaSeconds);
+
+	// This function asks the Bot if there's an obstacle blocking the way.
+	UFUNCTION(BlueprintNativeEvent, Category = "AI")
+		bool BotAIObstacleInTheWay(FVector &NormalToObstacle);
+	virtual bool  BotAIObstacleInTheWay_Implementation(FVector& NormalToObstacle);
 
 	// This function asks the Bot if it is in position to attack its current target. It does not actually command the Bot to attack.
 	UFUNCTION(BlueprintNativeEvent, Category = "AI")
 		bool BotAIShouldAttack();
 	virtual bool BotAIShouldAttack_Implementation();
 
-	// This function asks the Bot if it is in position to attack its current target. It does not actually command the Bot to attack.
+	// This function asks the Bot if it sees its current target.
 	UFUNCTION(BlueprintNativeEvent, Category = "AI")
 		bool BotAITargetInSight();
 	virtual bool BotAITargetInSight_Implementation();
+
+	//~ Begin interface
+	virtual void GetShot() override;
+	//~ End interface
 
 	//~
 	//~ New Bot Input
@@ -96,6 +110,10 @@ private:
 	// Sprite for the tank body.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bot", meta = (AllowPrivateAccess = "true"))
 		class UPaperSpriteComponent* BotSprite;
+
+	// Body for collision test
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bot", meta = (AllowPrivateAccess = "true"))
+		class USphereComponent* BotBody;
 
 	/* The actor we're targeting. Will be NULL if there is no target. */
 	UPROPERTY(VisibleInstanceOnly, Category = "AI")
@@ -158,4 +176,6 @@ protected:
 	/** Game time, in seconds, when the Bot will be allowed to attack again. */
 	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadWrite, Category = "Bot")
 		float AttackAvailableTime;
+
+	bool bIsKilled;
 };

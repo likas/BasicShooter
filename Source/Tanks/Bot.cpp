@@ -6,7 +6,9 @@
 #include "GameFramework/Pawn.h"
 #include "Math/Vector.h"
 #include "Missile.h"
+#include "Engine/StaticMeshActor.h"
 #include "PaperSpriteComponent.h"
+#include <AIController.h>
 
 const FName ABot::MuzzleSocketName(TEXT("GunBarrel"));
 
@@ -27,6 +29,11 @@ ABot::ABot()
 	BotSprite = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("BotSprite"));
 	BotSprite->SetupAttachment(RootComponent);
 
+	BotBody = CreateDefaultSubobject<USphereComponent>(TEXT("BotBody"));
+	BotBody->SetupAttachment(RootComponent);
+	BotBody->InitSphereRadius(44.f); //SetBoxExtent(FVector(40.0f, 40.0f, 100.0f));
+	BotBody->SetCollisionProfileName(TEXT("Bot:Move")); //ADD THAT
+
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	Health = 100.f;
@@ -43,6 +50,7 @@ ABot::ABot()
 // Called when the game starts or when spawned
 void ABot::BeginPlay()
 {
+	bIsKilled = false;
 	Super::BeginPlay();
 	AActor* Target = UGameplayStatics::GetPlayerPawn(this, 0); SetTarget(Target);
 	//Check if target is a tank
@@ -60,16 +68,41 @@ void ABot::BeginPlay()
 void ABot::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (bIsKilled == false)
+	{
+		//BotAI(DeltaTime);
+		UE_LOG(LogTemp, Log, TEXT("Attack input is %5d"), GetAttackInput() ? 1 : 0);
 
-	//BotAI(DeltaTime);
+		//BotAIShouldAttack();
+		if (GetAttackInput())
+		{
+			//spawn a missile
+			if (UWorld* World = GetWorld()) {
+				float CurrentTime = World->GetTimeSeconds();
+				if (AttackAvailableTime <= CurrentTime)
+				{
+					FVector Loc = BotDirection->GetComponentLocation();
+					FRotator Rot = BotDirection->GetComponentRotation();
+					if (AActor* NewProjectile = World->SpawnActor(Projectile))
+					{
+						UE_LOG(LogTemp, Log, TEXT("Projectile spawned"));
+						NewProjectile->SetActorLocation(Loc);
+						NewProjectile->SetActorRotation(Rot);
+					}
 
-	BotAIShouldAttack();
+					// Set the cooldown timer.
+					AttackAvailableTime = CurrentTime + AttackCooldown;
+				}
+			}
+		}
 
-	FVector PendingMovement = GetPendingMovementInputVector();
-	UE_LOG(LogTemp, Log, TEXT("Movement in Actor: %s"), *PendingMovement.ToString());
-	SetActorLocation(GetActorLocation() + (PendingMovement * DeltaTime * WalkSpeed));
-	FRotator DesiredRot = GetActorRotation() + FRotator(0.0f, GetRotationInput(), 0.0f);
-	SetActorRotation(DesiredRot);
+		FVector PendingMovement = GetPendingMovementInputVector();
+		UE_LOG(LogTemp, Log, TEXT("Movement in Actor: %s"), *PendingMovement.ToString());
+
+		SetActorLocation(GetActorLocation() + (PendingMovement * DeltaTime * WalkSpeed));
+		FRotator DesiredRot = GetActorRotation() + FRotator(0.0f, GetRotationInput(), 0.0f);
+		SetActorRotation(DesiredRot);
+	}
 	// Make sure to consume all input on each frame.
 	ConsumeMovementInputVector();
 	ConsumeRotationInput();
@@ -192,6 +225,7 @@ bool ABot::BotAIShouldAttack_Implementation()
 					if (ATank* HitActor = Cast<ATank>(OutHit.GetActor()))
 					{
 						UE_LOG(LogTemp, Warning, TEXT("Hit that bastard!"));
+						return true;
 					}
 					else if (ABot* Ourself = Cast<ABot>(OutHit.GetActor()))
 					{
@@ -205,7 +239,7 @@ bool ABot::BotAIShouldAttack_Implementation()
 			}
 		}
 	}
-	return true;
+	return false;
 }
 
 bool ABot::BotAITargetInSight_Implementation() {
@@ -215,6 +249,77 @@ bool ABot::BotAITargetInSight_Implementation() {
 		return true;
 	}
 	else return false;
+}
+
+bool  ABot::BotAIObstacleInTheWay_Implementation(FVector& NormalToObstacle)
+{
+	//Handle collisions
+	if (UWorld* World = GetWorld())
+	{
+		TArray<FHitResult> HitResults;
+		//FVector BoxSize = BotBody->GetScaledBoxExtent();
+		float BoxSize = BotBody->GetScaledSphereRadius();
+		FCollisionShape CollisionShape;
+		CollisionShape.SetSphere(BoxSize);
+		if (World->SweepMultiByProfile(HitResults, GetActorLocation(), GetActorLocation() + FVector(GetActorForwardVector().X * 20.f, GetActorForwardVector().Y * 20.f, 0.f), BotBody->GetComponentRotation().Quaternion(), "Bot:Move", CollisionShape))
+		{
+			for (const FHitResult& HitResult : HitResults)
+			{
+				if (ABot* Bot = Cast<ABot>(HitResult.GetActor())) {
+					UE_LOG(LogTemp, Log, TEXT("Bot: Hit by Bot (itself"))
+					//dont move
+				}
+				else if (AMissile* Bullet = Cast<AMissile>(HitResult.GetActor()))
+				{
+					UE_LOG(LogTemp, Log, TEXT("Bot: Hit by Missile"))
+					//generate dead event
+				}
+				else if (AStaticMeshActor* Wall = Cast<AStaticMeshActor>(HitResult.GetActor()))
+				{
+					//dont move also
+					SetActorLocation(GetActorLocation() + FVector(HitResult.Normal.X * HitResult.PenetrationDepth, HitResult.Normal.Y * HitResult.PenetrationDepth, 0.f));
+					NormalToObstacle = HitResult.Normal;
+					UE_LOG(LogTemp, Warning, TEXT("Bot: Hit by Wall or Obstacle"))
+					return true;
+				}
+				UE_LOG(LogTemp, Log, TEXT("Bot: Hit by: %s"), *HitResult.GetActor()->GetName())
+
+					/*if (IDamageInterface* DamageTarget = Cast<IDamageInterface>(HitResult.Actor.Get()))
+					{
+						// Getting crushed by a tank is pretty final. Damage is always enough to smoosh the raspberry jelly out of a zombie.
+						int32 TargetHealth = DamageTarget->GetHealthRemaining();
+						if (TargetHealth >= 0)
+						{
+							DamageTarget->ReceiveDamage(TargetHealth, EDamageType::Crushed);
+						}
+					}*/
+			}
+		}
+		else
+		{
+			NormalToObstacle = FVector::ZeroVector;
+			return false;
+			//ƒобавить вектор к текущему местоположению
+			//SetActorLocation(Pos + WhereToMove * MoveSpeed * DeltaTime);
+		}
+	}
+	NormalToObstacle = FVector::ZeroVector;
+	return false;
+}
+
+void ABot::GetShot()
+{
+	/*if (IKillableInterface* TankPlayer = Cast<IKillableInterface>(TargetActor))
+	{
+		TankPlayer->GetShot();
+	}*/
+	bIsKilled = true;
+	UE_LOG(LogTemp, Log, TEXT("Bot is killed!"));
+}
+
+bool ABot::IsDead() 
+{
+	return bIsKilled;
 }
 
 void ABot::SetTarget(AActor* NewTarget)

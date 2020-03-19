@@ -7,6 +7,7 @@
 //#include "PaperSpriteComponent.h"
 #include <Runtime\Engine\Classes\Components\ArrowComponent.h>
 #include "Camera/CameraComponent.h"
+#include "IKillableInterface.h"
 #include "Tank.generated.h"
 
 //Struct to manage inputs
@@ -41,7 +42,7 @@ public:
 };
 
 UCLASS()
-class TANKS_API ATank : public APawn
+class TANKS_API ATank : public APawn, public IKillableInterface
 {
 	GENERATED_BODY()
 
@@ -77,6 +78,13 @@ public:
 
 	FORCEINLINE const FTankInput& GetCurrentInput() const { return TankInput; }
 
+	//~ Begin interface
+	virtual void GetShot() override;
+	//~ End interface
+
+	bool IsDead();
+	FTransform GetStartPoint();
+
 private:
 	//Dont have to be the same as in mappings
 
@@ -103,9 +111,18 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
 		class UPaperSpriteComponent* TankSprite;
 
+	// Body for collision test
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
+		class UBoxComponent* TankBody;
+
+	
+
 	//In-game camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* CameraComponent;
+
+	UFUNCTION()
+		void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
 
 	// If this value is greater than the current game time, Fire1 is ignored because it has been fired too recently.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turret", meta = (AllowPrivateAccess = "true"))
@@ -114,4 +131,8 @@ private:
 	// Time to delay between Fire1 commands.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turret", meta = (AllowPrivateAccess = "true"))
 		float Fire1Cooldown;
+
+private:
+	bool bIsKilled;
+	FTransform StartPoint;
 };

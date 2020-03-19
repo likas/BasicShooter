@@ -2,11 +2,17 @@
 
 #include "Tank.h"
 #include "Tanks.h"
+#include "Bot.h"
+#include "Missile.h"
 #include "Components/ArrowComponent.h"
+#include "Components/BoxComponent.h"
 //#include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "PaperSpriteComponent.h"
+
+//class AMissile;
 
 //Moving straight
 void FTankInput::MoveForward(bool bPressed)
@@ -59,6 +65,14 @@ ATank::ATank()
 	TankSprite = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("TankSprite"));
 	TankSprite->SetupAttachment(TankDirection);
 
+	TankBody = CreateDefaultSubobject<UBoxComponent>(TEXT("TankBody"));
+	TankBody->SetupAttachment(TankDirection);
+	TankBody->SetBoxExtent(FVector(40.0f, 40.0f, 100.0f));
+	TankBody->SetCollisionProfileName(TEXT("Tank:Move")); //ADD THAT
+
+
+	//TankCollisionCapsule->OnComponentHit.AddDynamic(this, &ATank::OnHit);
+
 	USpringArmComponent* SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->TargetArmLength = 500.f;
 	SpringArm->bEnableCameraLag = true;
@@ -67,7 +81,7 @@ ATank::ATank()
 	SpringArm->CameraLagSpeed = 2.f;
 	SpringArm->bDoCollisionTest = false;
 	SpringArm->SetupAttachment(RootComponent);
-	SpringArm->SetWorldRotation(FRotator(0.f, 0.f, 0.f)); // Fixed on creation
+	SpringArm->SetWorldRotation(FRotator(-90.f, 0.f, 0.f)); // Fixed on creation
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComponent->bUsePawnControlRotation = false;
@@ -87,7 +101,8 @@ ATank::ATank()
 void ATank::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	bIsKilled = false;
+	StartPoint = GetTransform();
 }
 
 // Called every frame
@@ -97,40 +112,117 @@ void ATank::Tick(float DeltaTime)
 
 	const FTankInput& CurrentInput = GetCurrentInput();
 
-	if (CurrentInput.bMoveForward || CurrentInput.bMoveBackward)
+	// Respond to controls if we're not dead.
+	if (bIsKilled == false)
 	{
-		//ѕолучить вектор направлени€
-		FVector WhereToMove = TankDirection->GetForwardVector() * (CurrentInput.bMoveForward ? 1 : -1);
-
-		//ƒобавить вектор к текущему местоположению
-		FVector Pos = GetActorLocation();
-		SetActorLocation(Pos + WhereToMove * MoveSpeed * DeltaTime);
-	}
-	if (CurrentInput.bTurnLeft || CurrentInput.bTurnRight)
-	{
-		//TODO Make it frame-independent
-		FRotator NewRotation = FRotator(0.f, CurrentInput.bTurnRight ? YawSpeed : -1.f * YawSpeed, 0.f);
-		FQuat QuatRotation = FQuat(NewRotation);
-		TankDirection->AddLocalRotation(QuatRotation, false, 0, ETeleportType::None);
-	}
-
-	if (UWorld* World = GetWorld()) {
-		float CurrentTime = World->GetTimeSeconds();
-		if (CurrentInput.bFire1 && Fire1ReadyTime <= CurrentTime)
+		if (CurrentInput.bMoveForward || CurrentInput.bMoveBackward)
 		{
-			FVector Loc = GetActorLocation();
-			FRotator Rot = TankDirection->GetComponentRotation();
-			if (AActor* NewProjectile = World->SpawnActor(Projectile))
+			//ѕолучить вектор направлени€
+			FVector WhereToMove = TankDirection->GetForwardVector() * (CurrentInput.bMoveForward ? 1 : -1);
+
+
+			FVector Pos = GetActorLocation();
+
+
+			//Handle collisions
+			if (UWorld* World = GetWorld())
 			{
-				UE_LOG(LogTemp, Log, TEXT("Projectile spawned"));
-				NewProjectile->SetActorLocation(Loc);
-				NewProjectile->SetActorRotation(Rot);
+				TArray<FHitResult> HitResults;
+				FVector BoxSize = TankBody->GetScaledBoxExtent();
+				FCollisionShape CollisionShape;
+				CollisionShape.SetBox(BoxSize);
+				if (World->SweepMultiByProfile(HitResults, Pos, Pos + WhereToMove * MoveSpeed * DeltaTime, TankBody->GetComponentRotation().Quaternion(), "Tank:Move", CollisionShape))
+				{
+					for (const FHitResult& HitResult : HitResults)
+					{
+						if (ABot* Bot = Cast<ABot>(HitResult.GetActor())) {
+							//dont move
+						}
+						else if (AMissile* Bullet = Cast<AMissile>(HitResult.GetActor()))
+						{
+							//generate dead event
+						}
+						else if (UStaticMeshComponent* Wall = Cast<UStaticMeshComponent>(HitResult.GetActor()))
+						{
+							//dont move also
+						}
+						UE_LOG(LogTemp, Log, TEXT("Hit by: %s"), *HitResult.GetActor()->GetName())
+
+							/*if (IDamageInterface* DamageTarget = Cast<IDamageInterface>(HitResult.Actor.Get()))
+							{
+								// Getting crushed by a tank is pretty final. Damage is always enough to smoosh the raspberry jelly out of a zombie.
+								int32 TargetHealth = DamageTarget->GetHealthRemaining();
+								if (TargetHealth >= 0)
+								{
+									DamageTarget->ReceiveDamage(TargetHealth, EDamageType::Crushed);
+								}
+							}*/
+					}
+				}
+				else
+				{
+					//ƒобавить вектор к текущему местоположению
+					SetActorLocation(Pos + WhereToMove * MoveSpeed * DeltaTime);
+				}
 			}
 
-			// Set the cooldown timer.
-			Fire1ReadyTime = CurrentTime + Fire1Cooldown;
+		}
+		if (CurrentInput.bTurnLeft || CurrentInput.bTurnRight)
+		{
+			//TODO Make it frame-independent
+			FRotator NewRotation = FRotator(0.f, CurrentInput.bTurnRight != CurrentInput.bMoveBackward ? YawSpeed : -1.f * YawSpeed, 0.f);
+			FQuat QuatRotation = FQuat(NewRotation);
+			TankDirection->AddLocalRotation(QuatRotation, false, 0, ETeleportType::None);
+		}
+
+
+
+
+		//Shoot
+		if (UWorld* World = GetWorld()) {
+			float CurrentTime = World->GetTimeSeconds();
+			if (CurrentInput.bFire1 && Fire1ReadyTime <= CurrentTime)
+			{
+				FVector Loc = GetActorLocation() + FVector(TankDirection->GetForwardVector().X * 70.f, TankDirection->GetForwardVector().Y * 70.f, 0.f);
+				FRotator Rot = TankDirection->GetComponentRotation();
+				if (AActor* NewProjectile = World->SpawnActor(Projectile))
+				{
+					UE_LOG(LogTemp, Log, TEXT("Projectile spawned"));
+					NewProjectile->SetActorLocation(Loc);
+					NewProjectile->SetActorRotation(Rot);
+				}
+
+				// Set the cooldown timer.
+				Fire1ReadyTime = CurrentTime + Fire1Cooldown;
+			}
 		}
 	}
+}
+
+void ATank::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Hit by: %s"), *OtherActor->GetName());
+		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("I Hit: %s"), *OtherActor->GetName()));
+	}
+
+}
+
+void ATank::GetShot()
+{
+	bIsKilled = true;
+	UE_LOG(LogTemp, Log, TEXT("!"));
+}
+
+bool ATank::IsDead() 
+{
+	return bIsKilled;
+}
+
+FTransform ATank::GetStartPoint()
+{
+	return StartPoint;
 }
 
 // Called to bind functionality to input
