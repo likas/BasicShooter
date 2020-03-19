@@ -6,6 +6,7 @@
 #include "IKillableInterface.h"
 #include <Runtime\Engine\Classes\Kismet\KismetMathLibrary.h>
 #include "Math/UnrealMathUtility.h"
+#include "Wall.h"
 //#include <Runtime\Core\Private\Math\UnrealMath.cpp>
 //#include <Runtime/Core/Public/Math/UnrealMathUtility.h>
 //#include <Runtime/Core/Public/Math/UnrealMath.h>
@@ -75,7 +76,7 @@ void AMissile::Tick(float DeltaTime)
 				ItBleeds->GetShot();
 				Explode();
 			}
-			else if (OutHit.GetActor()->GetActorLabel() == "Cube4" || OutHit.GetActor()->GetActorLabel() == "Cube5" || OutHit.GetActor()->GetActorLabel() == "Cube6" || OutHit.GetActor()->GetActorLabel() == "Cube7")
+			else if (AWall* Wall = Cast<AWall>(OutHit.GetActor()))
 			{
 				//UE_LOG(LogTemp, Log, TEXT("Tag Wall"));
 				Explode();

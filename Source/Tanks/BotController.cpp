@@ -42,7 +42,7 @@ FVector ABotController::GetNewMovePoint()
 			for (int i = 1; i < TravelPath->PathPoints.Num(); ++i)
 			{
 				TravelPath->PathPoints[i].Z = PawnAsBot->GetActorLocation().Z;
-				DrawDebugSphere(GetWorld(), TravelPath->PathPoints[i], 10.f, 12, FColor(255, 0, 0), false, 100.f);
+				//DrawDebugSphere(GetWorld(), TravelPath->PathPoints[i], 10.f, 12, FColor(255, 0, 0), false, 100.f);
 				TravelPoints.Enqueue(TravelPath->PathPoints[i]);
 				//UE_LOG(LogTemp, Warning, TEXT("%d. Added Random Location: %f %f %f"), i, TravelPath->PathPoints[i].X, TravelPath->PathPoints[i].Y, TravelPath->PathPoints[i].Z);
 				UE_LOG(LogTemp, Warning, TEXT("%d. Added Random Location: %s"), i, *TravelPath->PathPoints[i].ToString());
@@ -192,7 +192,7 @@ void ABotController::Tick(float DeltaTime)
 			//DrawDebugSphere(GetWorld(), Destination, 10.f, 12, FColor(0, 255, 0), false, 100.f);
 		}
 		DestinationVector = (Destination - PawnAsBot->GetActorLocation()).GetSafeNormal();
-		DrawDebugDirectionalArrow(GetWorld(), PawnAsBot->GetActorLocation(), Destination, 30.f, FColor(0, 0, 255), false, 100.f);
+		//DrawDebugDirectionalArrow(GetWorld(), PawnAsBot->GetActorLocation(), Destination, 30.f, FColor(0, 0, 255), false, 100.f);
 		//PawnAsBot->AddMovementInput(FVector(DestinationVector.X, DestinationVector.Y, 0.f));
 		//UE_LOG(LogTemp, Log, TEXT("Sending movement to Actor: %s"), *DestinationVector.GetSafeNormal2D().ToString());
 

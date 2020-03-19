@@ -21,7 +21,7 @@ public:
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
 		uint32 bFire1 : 1;
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
-		uint32 bFire2 : 1;
+		uint32 bEsc : 1;
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
 		uint32 bMoveForward : 1;
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Tank Input")
@@ -38,7 +38,7 @@ public:
 	void TurnRight(bool bPressed);
 
 	void Fire1(bool bPressed);
-	void Fire2(bool bPressed);
+	void Esc(bool bPressed);
 };
 
 UCLASS()
@@ -99,8 +99,8 @@ private:
 
 	void Fire1Pressed();
 	void Fire1Released();
-	void Fire2Pressed();
-	void Fire2Released();
+	void EscPressed();
+	void EscReleased();
 
 	// Helpful debug tool - which way is the tank facing?
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
@@ -114,7 +114,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))
 		class UBoxComponent* TankBody;
 
-	
 
 	//In-game camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tank", meta = (AllowPrivateAccess = "true"))

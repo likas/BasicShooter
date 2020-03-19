@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "Math/Vector.h"
 #include "Missile.h"
+#include "Wall.h"
 #include "Engine/StaticMeshActor.h"
 #include "PaperSpriteComponent.h"
 #include <AIController.h>
@@ -223,7 +224,7 @@ bool ABot::BotAIShouldAttack_Implementation()
 				if (GetWorld()->SweepSingleByProfile(OutHit, BotDirection->GetComponentLocation(), BotDirection->GetComponentLocation() + FVector(GetActorForwardVector().X * DistanceToTarget, GetActorForwardVector().Y * DistanceToTarget, 0.f), FQuat::Identity, "Bullet", CollisionShape))
 				{
 					return true;
-					DrawDebugDirectionalArrow(GetWorld(), BotDirection->GetComponentLocation(), BotDirection->GetComponentLocation() + FVector(GetActorForwardVector().X * DistanceToTarget, GetActorForwardVector().Y * DistanceToTarget, 0.f), 30.f, FColor(255, 0, 0), false, 100.f);
+					//DrawDebugDirectionalArrow(GetWorld(), BotDirection->GetComponentLocation(), BotDirection->GetComponentLocation() + FVector(GetActorForwardVector().X * DistanceToTarget, GetActorForwardVector().Y * DistanceToTarget, 0.f), 30.f, FColor(255, 0, 0), false, 100.f);
 					if (ATank* HitActor = Cast<ATank>(OutHit.GetActor()))
 					{
 						UE_LOG(LogTemp, Warning, TEXT("Hit that bastard!"));

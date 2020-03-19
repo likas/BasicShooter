@@ -5,9 +5,11 @@
 #include "Bot.h"
 #include "Missile.h"
 #include "Components/ArrowComponent.h"
+#include "Wall.h"
 #include "Components/BoxComponent.h"
 //#include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "PaperSpriteComponent.h"
@@ -42,9 +44,9 @@ void FTankInput::Fire1(bool bPressed)
 	bFire1 = bPressed;
 }
 
-void FTankInput::Fire2(bool bPressed)
+void FTankInput::Esc(bool bPressed)
 {
-	bFire2 = bPressed;
+	bEsc = bPressed;
 }
 
 
@@ -114,6 +116,13 @@ void ATank::Tick(float DeltaTime)
 	// Respond to controls if we're not dead.
 	if (bIsKilled == false)
 	{
+		if (CurrentInput.bEsc) 
+		{
+
+			APlayerController* PC = Cast<APlayerController>(GetController());
+			UKismetSystemLibrary::QuitGame(GetWorld(), PC, EQuitPreference::Quit, false);
+			
+		}
 		if (CurrentInput.bMoveForward || CurrentInput.bMoveBackward)
 		{
 			//Получить вектор направления
@@ -234,8 +243,8 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("TurnLeft", EInputEvent::IE_Released, this, &ATank::TurnLeftReleased);
 	PlayerInputComponent->BindAction("Fire1", EInputEvent::IE_Pressed, this, &ATank::Fire1Pressed);
 	PlayerInputComponent->BindAction("Fire1", EInputEvent::IE_Released, this, &ATank::Fire1Released);
-	PlayerInputComponent->BindAction("Fire2", EInputEvent::IE_Pressed, this, &ATank::Fire2Pressed);
-	PlayerInputComponent->BindAction("Fire2", EInputEvent::IE_Released, this, &ATank::Fire2Released);
+	PlayerInputComponent->BindAction("Quit", EInputEvent::IE_Pressed, this, &ATank::EscPressed);
+	PlayerInputComponent->BindAction("Quit", EInputEvent::IE_Released, this, &ATank::EscReleased);
 }
 
 
@@ -292,12 +301,12 @@ void ATank::Fire1Released()
 	TankInput.Fire1(false);
 }
 
-void ATank::Fire2Pressed()
+void ATank::EscPressed()
 {
-	TankInput.Fire2(true);
+	TankInput.Esc(true);
 }
 
-void ATank::Fire2Released()
+void ATank::EscReleased()
 {
-	TankInput.Fire2(false);
+	TankInput.Esc(false);
 }
