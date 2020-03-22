@@ -39,7 +39,7 @@ ABot::ABot()
 	SightDistance = 300.f;
 	SightAngle = 180.f;
 	YawSpeed = 90.f;
-	WalkSpeed = 100.f;
+	MoveSpeed = 100.f;
 	AttackDistance = 100.f;
 	AttackAngle = 30.f;
 	AttackCooldown = 0.5f;
@@ -99,11 +99,14 @@ void ABot::Tick(float DeltaTime)
 			}
 		}
 
-		/* Move, if the controller tells us so */
-		FVector PendingMovement = GetPendingMovementInputVector();
-		SetActorLocation(GetActorLocation() + (PendingMovement * DeltaTime * WalkSpeed));
-		FRotator DesiredRot = GetActorRotation() + FRotator(0.0f, GetRotationInput(), 0.0f);
+		float MaxYawThisFrame = YawSpeed * DeltaTime;
+		FRotator DesiredRot = GetActorRotation() + FRotator(0.0f, FMath::Clamp(GetRotationInput(), -MaxYawThisFrame, MaxYawThisFrame), 0.0f);
 		SetActorRotation(DesiredRot);
+
+		/* Move, if the controller tells us so */
+		FVector PendingMovement = GetPendingMovementInputVector(); 
+		SetActorLocation(GetActorLocation() + (PendingMovement * DeltaTime * MoveSpeed));
+
 	}
 
 	// Make sure to consume all input on each frame.

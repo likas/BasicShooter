@@ -96,7 +96,7 @@ ATank::ATank()
 	CameraComponent->SetWorldRotation(FRotator(0.f, 0.f, 0.f)); // Fixed on creation
 
 	MoveSpeed = 100.0f;
-	YawSpeed = 5.0f;
+	YawSpeed = 150.0f;
 	Fire1Cooldown = 0.5f;
 }
 
@@ -169,7 +169,9 @@ void ATank::Tick(float DeltaTime)
 		if (CurrentInput.bTurnLeft || CurrentInput.bTurnRight)
 		{
 			//TODO Make it frame-independent
-			FRotator NewRotation = FRotator(0.f, CurrentInput.bTurnRight != CurrentInput.bMoveBackward ? YawSpeed : -1.f * YawSpeed, 0.f);
+			float FrameIndependentYawSpeed = YawSpeed * DeltaTime;
+			float DesiredDeltaYaw = CurrentInput.bTurnRight != CurrentInput.bMoveBackward ? FrameIndependentYawSpeed : -1.f * FrameIndependentYawSpeed;
+			FRotator NewRotation = FRotator(0.f, DesiredDeltaYaw, 0.f);
 			FQuat QuatRotation = FQuat(NewRotation);
 			TankDirection->AddLocalRotation(QuatRotation, false, 0, ETeleportType::None);
 		}

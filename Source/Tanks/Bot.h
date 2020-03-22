@@ -131,7 +131,7 @@ protected:
 
 	/** Speed when wandering around */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bot", meta = (ClampMin = "0.0"))
-		float WalkSpeed;
+		float MoveSpeed;
 
 	/** Attack distance. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bot", meta = (ClampMin = "0.0"))

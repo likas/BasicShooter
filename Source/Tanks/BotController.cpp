@@ -74,17 +74,19 @@ void ABotController::Tick(float DeltaTime)
 
 		float DotToTarget = FVector::DotProduct(DestinationVector, PawnAsBot->GetActorForwardVector());
 		float SidewaysDotToTarget = FVector::DotProduct(DestinationVector, PawnAsBot->GetActorRightVector());
+		float SupposedToBeAngle = FMath::RadiansToDegrees( FMath::Atan2(SidewaysDotToTarget, DotToTarget) );
+		UE_LOG(LogTemp, Log, TEXT("Angle is %f"), SupposedToBeAngle);
 
-		float Angle = PawnAsBot->GetActorForwardVector().Rotation().Yaw - DestinationVector.Rotation().Yaw;
+		//float Angle = PawnAsBot->GetActorForwardVector().Rotation().Yaw - DestinationVector.Rotation().Yaw;
 		//float Acos = FMath::RadiansToDegrees( FMath::Acos(DotToTarget) );
 	
-		if (FMath::Sign(DotToTarget) != FMath::Sign(SidewaysDotToTarget) && FMath::IsNearlyZero(DotToTarget) && FMath::IsNearlyZero(SidewaysDotToTarget)) { SidewaysDotToTarget += 0.5f; }
+		//if (FMath::Sign(DotToTarget) != FMath::Sign(SidewaysDotToTarget) && FMath::IsNearlyZero(DotToTarget) && FMath::IsNearlyZero(SidewaysDotToTarget)) { SidewaysDotToTarget += 0.5f; }
 
 		//Rotate to target
-		PawnAsBot->AddRotationInput((SidewaysDotToTarget) * 10);
+		PawnAsBot->AddRotationInput(SupposedToBeAngle);
 
 		//If not blocked and almost facing target
-		if (SidewaysDotToTarget <= 0.1)
+		if (FMath::Abs(SupposedToBeAngle) < 0.1f)
 		{
 			if (!bBlockedByObstacle) {
 				PawnAsBot->AddMovementInput(FVector(DestinationVector.X, DestinationVector.Y, 0.f));
