@@ -27,6 +27,11 @@ void ABotController::Tick(float DeltaTime)
 	if (PawnAsBot->BotAITargetInSight())
 	{
 		Destination = GetNewMovePoint();
+		/* Draw debug sphere where the destination is, but only if we're in PIE */
+		if (GetWorld()->IsPlayInEditor())
+		{
+			DrawDebugSphere(GetWorld(), Destination, 10.f, 12, FColor(255,0,0), false, 30.f);
+		}
 		/* 
 		Bot AI thinks we should attack, if the trajectory of our sight is intercepting with a player's body sprite
 		*/
@@ -55,8 +60,15 @@ void ABotController::Tick(float DeltaTime)
 	{
 		// If we don't see player (move randomly)
 		FVector DestinationVector;
-		if (FVector::DistXY(PawnAsBot->GetActorLocation(), Destination) <= 3.f || bBlockedByObstacle) {
+		if (FVector::DistXY(PawnAsBot->GetActorLocation(), Destination) <= 3.f || bBlockedByObstacle) 
+		{
 			Destination = GetNewMovePoint();
+			/* Draw debug sphere where the destination is, but only if we're in PIE */
+			if (GetWorld()->IsPlayInEditor()) 
+			{
+				DrawDebugSphere(GetWorld(), Destination, 10.f, 12, FColor(255, 0, 0), false, 30.f);
+				DrawDebugDirectionalArrow(GetWorld(), PawnAsBot->GetActorLocation(), Destination, 30.f, FColor(0, 255, 0), false, 100.f);
+			}
 		}
 		DestinationVector = (Destination - PawnAsBot->GetActorLocation()).GetSafeNormal();
 

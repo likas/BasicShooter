@@ -12,8 +12,8 @@ void ATanksGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	ATank* MyCharacter = Cast<ATank>(UGameplayStatics::GetPlayerPawn(this, 0));
-	ABot* Bot = Cast<ABot>(UGameplayStatics::GetActorOfClass(this, ABot::StaticClass()));
+
+	
 	/*
 	// TODO multiple bots
 	TArray<AActor*> Bots;
@@ -24,20 +24,25 @@ void ATanksGameMode::Tick(float DeltaTime)
 	
 	/* If someone get shot, increase opposite side's points, restart the game */
 
-	if (MyCharacter->IsDead())
+	if (ATank* MyCharacter = Cast<ATank>(UGameplayStatics::GetPlayerPawn(this, 0)))
 	{
-		TGI = Cast<UTanksGameInstance>(GetGameInstance());
-		TGI->SetBotScore();
-		UE_LOG(LogTemp, Log, TEXT("Tank death registered"));
-		RestartGame();
+		if (MyCharacter->IsDead())
+		{
+			TGI = Cast<UTanksGameInstance>(GetGameInstance());
+			TGI->SetBotScore();
+			UE_LOG(LogTemp, Log, TEXT("Tank death registered"));
+			RestartGame();
+		}
 	}
-
-	if (Bot->IsDead())
+	if (ABot* Bot = Cast<ABot>(UGameplayStatics::GetActorOfClass(this, ABot::StaticClass())))
 	{
-		TGI = Cast<UTanksGameInstance>(GetGameInstance());
-		TGI->SetTankScore();
-		UE_LOG(LogTemp, Log, TEXT("Bot death registered"));
-		RestartGame();
+		if (Bot->IsDead())
+		{
+			TGI = Cast<UTanksGameInstance>(GetGameInstance());
+			TGI->SetTankScore();
+			UE_LOG(LogTemp, Log, TEXT("Bot death registered"));
+			RestartGame();
+		}
 	}
 }
 

@@ -142,15 +142,16 @@ bool ABot::BotAIShouldAttack_Implementation()
 				FVector ShotLandLocation = BotDirection->GetComponentLocation() + FVector(GetActorForwardVector().X * DistanceToTarget, GetActorForwardVector().Y * DistanceToTarget, 0.f);
 				if (GetWorld()->SweepSingleByProfile(OutHit, BotDirection->GetComponentLocation(), ShotLandLocation, FQuat::Identity, "Bullet", CollisionShape))
 				{
-					return true;
-					/* 
-					// Very useful debug thing
-					DrawDebugDirectionalArrow(GetWorld(), BotDirection->GetComponentLocation(), ShotLandLocation, 30.f, FColor(255, 0, 0), false, 100.f);
-					*/
+					
+					// Very useful debug thing, only draw if PIE
+					if (GetWorld()->IsPlayInEditor())
+					{
+						DrawDebugDirectionalArrow(GetWorld(), BotDirection->GetComponentLocation(), ShotLandLocation, 30.f, FColor(255, 0, 0), false, 100.f);
+					}
+					
 					if (ATank* HitActor = Cast<ATank>(OutHit.GetActor()))
 					{
 						UE_LOG(LogTemp, Log, TEXT("Hit that bastard!"));
-						return true;
 					}
 					else if (ABot* Ourself = Cast<ABot>(OutHit.GetActor()))
 					{
@@ -160,6 +161,8 @@ bool ABot::BotAIShouldAttack_Implementation()
 					{
 						UE_LOG(LogTemp, Log, TEXT("Something is blocking the shot"));
 					}
+
+					return true;
 				}
 			}
 		}
